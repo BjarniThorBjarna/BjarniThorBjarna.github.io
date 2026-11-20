@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Backgammon</title>
+<style>
+:root{--wood:#71452d;--felt:#d7aa68;--dark:#502b20;--light:#f3dfba;--accent:#f0b84b}*{box-sizing:border-box}body{margin:0;background:#171717;color:#fff;font-family:system-ui,Segoe UI,Arial,sans-serif;display:grid;place-items:center;min-height:100vh;padding:16px}.app{width:min(100%,980px)}h1{margin:0 0 8px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:10px}.status{color:#ddd}.board{background:var(--wood);border:10px solid #4a2b1c;border-radius:16px;padding:10px;display:grid;grid-template-columns:1fr 58px 1fr;gap:8px;box-shadow:0 18px 50px #0008}.half{background:var(--felt);display:grid;grid-template-columns:repeat(6,1fr);position:relative;min-height:560px}.bar{background:#3c2519;border-radius:8px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:10px 4px}.point{position:relative;min-width:0;cursor:pointer}.point.top:before,.point.bottom:before{content:"";position:absolute;left:2px;right:2px;height:48%;clip-path:polygon(50% 100%,0 0,100% 0);background:var(--dark)}.point.bottom:before{bottom:0;transform:rotate(180deg)}.point.top:before{top:0}.point.alt:before{background:var(--light)}.stack{position:absolute;inset:4px;display:flex;align-items:center;z-index:2;pointer-events:none}.top .stack{flex-direction:column}.bottom .stack{flex-direction:column-reverse}.checker{width:min(58px,90%);aspect-ratio:1;border-radius:50%;margin:-4px 0;border:2px solid #0007;box-shadow:inset 0 2px 5px #fff5,0 2px 3px #0007}.white{background:#f6f0df}.black{background:#252525}.selected{outline:4px solid var(--accent);outline-offset:-4px}.legal{box-shadow:inset 0 0 0 4px #65d66f}.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}button{border:0;border-radius:9px;padding:11px 16px;font-weight:700;cursor:pointer;background:#eee;color:#111}button.primary{background:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}.dice{display:flex;gap:8px}.die{background:#fff;color:#111;width:42px;height:42px;border-radius:8px;display:grid;place-items:center;font-size:24px;font-weight:800}.used{opacity:.3}.note{font-size:13px;color:#bbb;margin-top:9px}.badge{font-size:12px;padding:3px 7px;border-radius:99px;background:#ffffff18}.barStack{display:flex;flex-direction:column;align-items:center}.bar .checker{width:42px} @media(max-width:650px){.half{min-height:430px}.board{grid-template-columns:1fr 42px 1fr;padding:5px;border-width:6px;gap:4px}.checker{margin:-2px 0}.bar .checker{width:32px}}
+</style>
+</head>
+<body><main class="app">
+<div class="top"><div><h1>Backgammon</h1><div id="status" class="status">White to roll</div></div><div class="dice" id="dice"></div></div>
+<div class="board"><div class="half" id="left"></div><div class="bar"><div id="barBlack" class="barStack"></div><span class="badge">BAR</span><div id="barWhite" class="barStack"></div></div><div class="half" id="right"></div></div>
+<div class="controls"><button id="roll" class="primary">Roll dice</button><button id="undo" disabled>Undo move</button><button id="newgame">New game</button></div>
+<div class="note">Local 2-player game. Click one of your checkers, then a highlighted destination. Bar entry, hits, doubles and bearing off are supported.</div>
+</main>
+<script>
+(()=>{
+const W=1,B=-1; let board,bar,off,turn,dice,selected,history,rolled;
+const $=s=>document.querySelector(s); const clone=o=>JSON.parse(JSON.stringify(o));
+function init(){board=Array(24).fill(0); // standard setup: positive white, negative black
+board[0]=2;board[11]=5;board[16]=3;board[18]=5;board[23]=-2;board[12]=-5;board[7]=-3;board[5]=-5;
+bar={1:0,'-1':0};off={1:0,'-1':0};turn=W;dice=[];selected=null;history=[];rolled=false;render()}
+function owner(v){return Math.sign(v)} function count(v){return Math.abs(v)}
+function home(t,p){return t===W?p>=18:p<=5} function allHome(t){if(bar[t])return false;for(let i=0;i<24;i++)if(owner(board[i])===t&&!home(t,i))return false;return true}
+function destination(t,src,d){return t===W?src+d:src-d}
+function canLand(t,p){return p>=0&&p<24&&(owner(board[p])!==-t||count(board[p])===1)}
+function usableDice(){return dice.map((d,i)=>({d:typeof d==='object'?d.v:d,i,used:typeof d==='object'?d.used:false})).filter(x=>!x.used)}
+function exactOrOvershoot(t,src,d){const dest=destination(t,src,d);if(dest===24||dest===-1)return true;if(t===W&&dest>23){for(let i=18;i<src;i++)if(owner(board[i])===t)return false;return true}if(t===B&&dest<0){for(let i=5;i>src;i--)if(owner(board[i])===t)return false;return true}return false}
+function movesFrom(src){let r=[];for(const x of usableDice()){let dest;if(src==='bar')dest=turn===W?x.d-1:24-x.d;else dest=destination(turn,src,x.d);if(dest>=0&&dest<24&&canLand(turn,dest))r.push({dest,di:x.i});else if(src!=='bar'&&allHome(turn)&&exactOrOvershoot(turn,src,x.d))r.push({dest:'off',di:x.i});}return r}
+function anyMove(){if(!usableDice().length)return false;if(bar[turn])return movesFrom('bar').length>0;for(let i=0;i<24;i++)if(owner(board[i])===turn&&movesFrom(i).length)return true;return false}
+function select(src){if(!rolled)return;if(bar[turn]&&src!=='bar')return;if(src==='bar'?!bar[turn]:owner(board[src])!==turn)return;selected=src;render()}
+function save(){history.push({board:clone(board),bar:clone(bar),off:clone(off),turn,dice:clone(dice),selected,rolled});$('#undo').disabled=false}
+function move(dest){if(selected===null)return;const m=movesFrom(selected).find(x=>x.dest===dest);if(!m)return;save();if(selected==='bar')bar[turn]--;else board[selected]-=turn;if(dest==='off')off[turn]++;else{if(owner(board[dest])===-turn){board[dest]=0;bar[-turn]++}board[dest]+=turn}if(typeof dice[m.di]==='object')dice[m.di].used=true;else dice[m.di]={v:dice[m.di],used:true};selected=null;if(off[turn]===15){render();$('#status').textContent=(turn===W?'White':'Black')+' wins!';$('#roll').disabled=true;return}if(!usableDice().length||!anyMove())endTurn();else render()}
+function endTurn(){turn=-turn;dice=[];rolled=false;selected=null;render()}
+function roll(){if(rolled)return;let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);dice=a===b?[a,a,a,a]:[a,b];rolled=true;render();if(!anyMove())setTimeout(endTurn,600)}
+function undo(){let s=history.pop();if(!s)return;({board,bar,off,turn,dice,selected,rolled}=s);render()}
+function pointEl(i){let el=document.createElement('div');let top=(i>=12&&i<=17)||(i>=18&&i<=23); el.className='point '+(top?'top':'bottom')+(i%2?' alt':'');el.dataset.p=i;let st=document.createElement('div');st.className='stack';for(let n=0;n<count(board[i]);n++){let c=document.createElement('div');c.className='checker '+(owner(board[i])===W?'white':'black');st.appendChild(c)}el.appendChild(st);el.onclick=()=>{if(selected!==null&&movesFrom(selected).some(m=>m.dest===i))move(i);else select(i)};return el}
+function render(){let L=$('#left'),R=$('#right');L.innerHTML=R.innerHTML=''; // visual point order
+[12,13,14,15,16,17,11,10,9,8,7,6].forEach((p,k)=>(k<6?L:R).appendChild(pointEl(p))); // rebuild below with CSS placement trick avoided
+L.innerHTML=R.innerHTML=''; const left=[12,13,14,15,16,17,11,10,9,8,7,6],right=[18,19,20,21,22,23,5,4,3,2,1,0];
+function fill(root,arr){arr.forEach((p,k)=>{let e=pointEl(p);e.style.gridColumn=(k%6)+1;e.style.gridRow=k<6?1:2;root.appendChild(e)})}L.style.gridTemplateRows='1fr 1fr';R.style.gridTemplateRows='1fr 1fr';fill(L,left);fill(R,right);
+if(selected!==null){if(selected!=='bar'){document.querySelectorAll('[data-p="'+selected+'"]').forEach(e=>e.classList.add('selected'))}movesFrom(selected).forEach(m=>{if(m.dest!=='off')document.querySelectorAll('[data-p="'+m.dest+'"]').forEach(e=>e.classList.add('legal'))})}
+for(const t of [B,W]){let root=$(t===W?'#barWhite':'#barBlack');root.innerHTML='';for(let n=0;n<bar[t];n++){let c=document.createElement('div');c.className='checker '+(t===W?'white':'black');root.appendChild(c)}root.onclick=()=>select('bar');if(selected==='bar'&&t===turn)root.classList.add('selected');else root.classList.remove('selected')}
+$('#dice').innerHTML=dice.map(x=>'<div class="die '+(x.used?'used':'')+'">'+x+(x.used?'':'')+'</div>').join(''); // supports primitive dice then normalize below
+$('#dice').innerHTML='';dice.forEach((x,i)=>{let d=document.createElement('div');d.className='die '+(x.used?'used':'');d.textContent=typeof x==='object'?x.v:x;$('#dice').appendChild(d)});
+$('#status').textContent=(turn===W?'White':'Black')+(rolled?' to move':' to roll')+' · Off: White '+off[W]+' / Black '+off[B];$('#roll').disabled=rolled;$('#undo').disabled=!history.length}
+// dice items need used flag while retaining numeric behavior
+const oldRoll=roll; roll=function(){if(rolled)return;let a=1+Math.floor(Math.random()*6),b=1+Math.floor(Math.random()*6);dice=(a===b?[a,a,a,a]:[a,b]).map(v=>({v,used:false,valueOf(){return this.v}}));rolled=true;render();if(!anyMove())setTimeout(endTurn,600)}
+document.addEventListener('click',e=>{if(e.target.closest('.point')&&selected!==null&&allHome(turn)){/* destination off stays via overshoot auto only when clicking selected again */let src=+e.target.closest('.point').dataset.p;if(src===selected){let m=movesFrom(selected).find(x=>x.dest==='off');if(m)move('off')}}});
+$('#roll').onclick=()=>roll();$('#undo').onclick=undo;$('#newgame').onclick=()=>{if(confirm('Start a new game?'))init()};init();
+})();
+</script></body></html>
