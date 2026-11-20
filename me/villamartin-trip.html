@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="is">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,6 +20,8 @@ a{color:light-dark(#0b5f85,#7cc8ec)}
 .hero{background:linear-gradient(160deg,#0b4f6c,#08384d);color:#fff;padding:clamp(22px,4vw,44px) max(5vw,16px) 20px}
 .hero h1{font:800 clamp(30px,5vw,46px)/1.05 Figtree,sans-serif;margin:0}
 .hero p{margin:6px 0 0;opacity:.88}
+.hero{position:relative}.langbtn{position:absolute;top:14px;right:max(5vw,16px);background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:10px;min-height:40px;min-width:48px;font:800 15px Figtree,sans-serif;cursor:pointer}
+.hero h1{padding-right:60px}
 .count{display:inline-block;margin-top:12px;background:var(--orange);color:#1d1205;font-weight:800;padding:4px 12px;border-radius:999px}
 .days{display:flex;gap:8px;overflow-x:auto;padding:16px max(5vw,16px) 6px;scroll-snap-type:x proximity;background:linear-gradient(#08384d,#08384d) top/100% 50px no-repeat}
 .day{flex:none;scroll-snap-align:start;width:86px;border:0;border-radius:14px;background:var(--card);color:var(--ink);padding:8px 6px;text-align:center;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.12);font:inherit}
@@ -77,8 +79,9 @@ footer li{margin:2px 0}
 </head>
 <body>
 <header class="hero">
-  <h1>Villamartín, 23 Nov – 3 Dec</h1>
-  <p>Food, markets, old towns and culture by car, with a hotel weekend in Valencia.</p>
+  <button type="button" class="langbtn" id="langBtn">EN</button>
+  <h1 id="hTitle"></h1>
+  <p id="hSub"></p>
   <span class="count" id="count"></span>
 </header>
 <nav class="days" id="days" aria-label="Trip days"></nav>
@@ -88,32 +91,32 @@ footer li{margin:2px 0}
       <h2 id="dTitle"></h2>
       <p class="tagline" id="dArea"></p>
       <div id="dNotes"></div>
-      <h3 id="picksTitle">Top picks</h3>
+      <h3 id="picksTitle"></h3>
       <ol class="list" id="picks"></ol>
       <div class="row">
         <button type="button" class="btn" id="moreBtn"></button>
       </div>
       <div class="row">
-        <label for="addSel" class="small">Add an activity to this day</label>
+        <label for="addSel" class="small" id="addLbl"></label>
         <select id="addSel"></select>
-        <button type="button" class="btn main" id="addBtn">Add</button>
+        <button type="button" class="btn main" id="addBtn"></button>
       </div>
     </section>
     <aside class="wx" id="wx" aria-live="polite"></aside>
   </div>
 
-  <h3>Weekend hotels (under €120 a night)</h3>
+  <h3 id="hotelsH"></h3>
   <div class="hotels" id="hotels"></div>
 
-  <h3>All activities</h3>
+  <h3 id="allH"></h3>
   <div class="row">
-    <select id="catSel" aria-label="Filter by type"></select>
+    <select id="catSel"></select>
   </div>
   <ol class="list" id="all"></ol>
 
   <footer>
-    <p class="small">Forecast: AccuWeather snapshot from 20 Nov for 23–29 Nov. When the page has internet it refreshes all days from Open-Meteo. Drive times are rough estimates from Villamartín. Opening hours change, so check the link before you go. Your added activities are saved on this phone only.</p>
-    <p class="small"><b>Sources:</b></p>
+    <p class="small" id="footP"></p>
+    <p class="small"><b id="srcH"></b></p>
     <ul class="small" id="sources"></ul>
   </footer>
 </main>
@@ -123,6 +126,96 @@ const LAT=37.941,LON=-0.756,KEY='villamartin-trip-adds';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const map=q=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+/* ---------- Icelandic translations ---------- */
+const UI={
+is:{title:'Villamartín, 23. nóv. – 3. des.',sub:'Matur, markaðir, gamlir bæir og menning á bíl, með hótelhelgi í Valencia.',days:'Dagar ferðarinnar',top10:'10 bestu tillögurnar',allSug:'Allar tillögur ({n})',showAll:'Sýna allar {n} tillögur',showTop:'Sýna bara 10 bestu',addLbl:'Bæta afþreyingu við þennan dag',add:'Bæta við',hotels:'Hótel um helgina (undir €120 nóttin)',allAct:'Öll afþreying',allTypes:'Allar tegundir',filter:'Sía eftir tegund',
+ foot:'Veðurspá: AccuWeather frá 20. nóv. fyrir 23.–29. nóv. Þegar síðan er tengd netinu uppfærast allir dagar frá Open-Meteo. Aksturstímar eru gróft mat frá Villamartín. Opnunartímar breytast, svo kíktu á hlekkinn áður en þú ferð. Það sem þú bætir við vistast bara í þessum síma.',sources:'Heimildir:',
+ hotelNight:'<b>Hótelnótt í {c}.</b> Sjá hótelin hér fyrir neðan.',rainLikely:'<b>Líkur á rigningu ({p}%).</b> Afþreying innandyra er ofar á listanum í dag.',
+ inPlan:'Í planinu',added:'Þú bættir við',indoor:'Innandyra / í lagi í rigningu',open:'Opið',closed:'Ekki opið þennan vikudag',website:'Vefsíða',map:'Kort',info:'Upplýsingar',dir:'Leiðarlýsing',remove:'Fjarlægja',check:'Skoða verð',
+ noWx:'Engin spá fyrir {d} enn. Hún birtist þegar dagurinn er kominn inn í spátímabilið og síðan er tengd netinu.',rain:'Líkur á rigningu',wind:'Mesti vindur',live:'Lifandi spá frá Open-Meteo fyrir Villamartín.',snap:'AccuWeather-spá frá 20. nóv.',snapV:' Sýnd fyrir Valencia.',
+ toGo:'{n} dagar í ferð',toGo1:'1 dagur í ferð',there:'Þið eruð komin. Góða skemmtun!',over:'Ferðinni er lokið',whyT:'Af hverju Valencia þessa helgi',
+ why:'Á lau. 28. eru minni líkur á rigningu í Valencia (56%) en í Granada (65%, um 10 mm). Mercado Central er opinn á laugardegi og sunnudagurinn lítur út fyrir sól við Albufera. Aksturinn er 2 klst. í stað 3,5.',min:'mín.',lang:'EN'},
+en:{title:'Villamartín, 23 Nov – 3 Dec',sub:'Food, markets, old towns and culture by car, with a hotel weekend in Valencia.',days:'Trip days',top10:'Top 10 picks',allSug:'All suggestions ({n})',showAll:'Show all {n} suggestions',showTop:'Show top 10 only',addLbl:'Add an activity to this day',add:'Add',hotels:'Weekend hotels (under €120 a night)',allAct:'All activities',allTypes:'All types',filter:'Filter by type',
+ foot:'Forecast: AccuWeather snapshot from 20 Nov for 23–29 Nov. When the page has internet it refreshes all days from Open-Meteo. Drive times are rough estimates from Villamartín. Opening hours change, so check the link before you go. Your added activities are saved on this phone only.',sources:'Sources:',
+ hotelNight:'<b>Hotel night in {c}.</b> See the weekend hotels below.',rainLikely:'<b>Rain likely ({p}%).</b> Indoor options are ranked higher today.',
+ inPlan:'In the plan',added:'Added by you',indoor:'Indoors / rain-OK',open:'Open',closed:'Not on this weekday',website:'Website',map:'Map',info:'Info',dir:'Directions',remove:'Remove',check:'Check prices',
+ noWx:'No forecast for {d} yet. It will appear once it is within the forecast range and the page is online.',rain:'Rain chance',wind:'Max wind',live:'Live forecast from Open-Meteo for Villamartín.',snap:'AccuWeather forecast snapshot from 20 Nov.',snapV:' Shown for Valencia.',
+ toGo:'{n} days to go',toGo1:'1 day to go',there:'You are there. Enjoy!',over:'Trip finished',whyT:'Why Valencia this weekend',
+ why:'On Sat 28 Valencia has a lighter rain risk (56%) than Granada (65%, about 10 mm). The Mercado Central is open on Saturday, and Sunday looks sunny for the Albufera. The drive is 2 h instead of 3.5 h.',min:'min',lang:'IS'}};
+const CAT_IS={Markets:'Markaðir',Food:'Matur',Culture:'Menning',Towns:'Bæir',Nature:'Náttúra',Christmas:'Jól'};
+const DN_IS=['Sun','Mán','Þri','Mið','Fim','Fös','Lau'],MON_IS=['jan.','feb.','mar.','apr.','maí','jún.','júl.','ág.','sep.','okt.','nóv.','des.'];
+const PH_IS={'Sunny':'Sól','Clouds and sun':'Sól og ský','Afternoon showers, breezy':'Skúrir síðdegis, gola','Breezy, afternoon showers':'Gola, skúrir síðdegis','Partly sunny':'Léttskýjað','Valencia: cloudy, some p.m. rain':'Valencia: skýjað, smá rigning síðdegis','Valencia: mostly sunny':'Valencia: að mestu sól','Sun and clouds':'Sól og ský','Cloudy':'Skýjað','Fog':'Þoka','Showers':'Skúrir','Thunderstorms':'Þrumuveður','Snow':'Snjór'};
+const A_IS={
+ flamenca:['Laugardagsmarkaðurinn í Playa Flamenca','Einn stærsti vikumarkaðurinn á svæðinu: ávextir, ostar, bakarí og föt. Laugardaga kl. 8–14.'],
+ torremkt:['Föstudagsmarkaðurinn í Torrevieja','Stærsti markaðurinn á svæðinu, á föstudagsmorgnum við hliðina á Aquópolis-vatnagarðinum.'],
+ zoco:['Sunnudagsmarkaðurinn El Zoco, Algorfa','Sunnudagsmarkaður með vörur úr héraði og handverk, kl. 8–14.'],
+ orimkt:['Þriðjudagsmarkaðurinn í Orihuela','Vikumarkaður á Avenida Marqués de Molins, kl. 8–14. Gott að tengja við gamla bæinn.'],
+ sanmiguel:['Miðvikudagsmarkaðurinn í San Miguel de Salinas','Lítill vikumarkaður heimamanna á Calle Juan XXIII.'],
+ lamata:['Miðvikudagsmarkaðurinn í La Mata','Vikumarkaður á Avenida de Francia í La Mata, kl. 8–14.'],
+ veronicas:['Mercado de Verónicas, Murcia','Matarhöll í Art Nouveau-stíl frá 1916 við ána. Fiskur á neðri hæð og grænmeti og ávextir úr héraðinu á efri hæð. Farið að morgni.'],
+ casino:['Real Casino de Murcia','Glæsilegur klúbbur frá 19. öld með arabískum húsagarði, enskt bókasafn og danssal. Opið daglega kl. 10:30–19:30, um €5 með hljóðleiðsögn.'],
+ murciacat:['Dómkirkjan í Murcia og Plaza Belluga','Barokkframhlið á aðaltorgi borgarinnar, þar sem kveikt var á jólaljósunum 21. nóv.'],
+ flores:['Tapas á Plaza de las Flores, Murcia','Klassíska tapastorg Murcia. Prófið marinera (rússneskt salat með ansjósu) og zarangollo.'],
+ murxmas:['Jólaljósin í Murcia','Kveikt var á þeim 21. nóv. á Plaza del Cardenal Belluga. Fallegust eftir myrkur.'],
+ orihuela:['Gamli bærinn í Orihuela','Santo Domingo-skólinn („Escorial austursins“), gotneska dómkirkjan og endurreisnarhallir. Einn ríkasti sögubær Alicante-héraðs.'],
+ oricastle:['Útsýnisstaðurinn við kastalann í Orihuela','Stutt og brött ganga upp San Miguel-fjallið með útsýni yfir bæinn og pálmalundina. Farið í þurru veðri.'],
+ teatro:['Rómverska leikhússafnið, Cartagena','Eitt stærsta rómverska leikhúsið á Spáni, gengið í gegnum safn hannað af Moneo. Lokað á mánudögum, um €7.'],
+ cartapass:['Puerto de Culturas-passinn, Cartagena','Einn miði á helstu staði borgarinnar: torgið, púnverska múrinn, Concepción-kastalann og útsýnislyftuna.'],
+ cartatapas:['Tapas og höfnin í gamla bænum í Cartagena','Götur í Art Nouveau-stíl (Calle Mayor) og svo smábátahöfnin. Prófið café asiático, lagskipt kaffi Cartagena.'],
+ palos:['Vitinn í Cabo de Palos og sjávarréttahádegi','Fiskiþorp með veitingastöðum við höfnina, gott stopp á leiðinni frá Cartagena. Caldero (hrísgrjón soðin í fiskisoði) er réttur staðarins.'],
+ huerto:['Pálmagarðurinn Huerto del Cura, Elche','Hjarta eina pálmaskógar Evrópu, á heimsminjaskrá UNESCO, með „keisarapálmanum“. Um €7.'],
+ elcheold:['Gamli bærinn í Elche og Santa María-kirkjan','Í kirkjunni er miðaldaleikurinn Misteri d\'Elx sýndur. Plaça de Baix er miðpunktur jólanna í Elche.'],
+ elchexmas:['Jólaljósin í Elche','Árið 2025 var kveikt á þeim í lok nóvember á Plaça de Baix, yfir 2 milljónir LED-ljósa. Athugið dagsetninguna í ár.'],
+ arroz:['Arroz con costra í Elche','Ofnbökuð hrísgrjón Elche með eggjaskorpu. Leitið að réttinum á hádegismatseðlum í gamla bænum.'],
+ alimkt:['Mercado Central, Alicante','Markaðshöll í Art Nouveau-stíl frá 1912–21 með nærri 300 básum. Farið að morgni og fáið ykkur svo tapas í nágrenninu.'],
+ barbara:['Santa Bárbara-kastalinn, Alicante','Virki á hæð með besta útsýninu yfir borgina og ströndina. Ókeypis inn; lyfta upp frá Postiguet-ströndinni.'],
+ santacruz:['Santa Cruz-hverfið og Explanada, Alicante','Hvítkalkaðar götur gamla bæjarins undir kastalanum og svo mósaíkgöngugatan Explanada við höfnina.'],
+ alixmas:['Jólin í Alicante','Yfir 2,6 milljónir ljósa, risastór jötumynd við ráðhúsið og yfir 60 viðburðir fram í janúar (dagskrá 2025).'],
+ tabarca:['Bátsferð til Tabarca-eyjar','Eina byggða eyjan í Valencia-héraði. Á veturna fer báturinn frá Alicante kl. 12:00 og til baka kl. 16:00, þri.–sun. Einnig vatnaleigubílar frá Santa Pola. Farið aðeins í logni.'],
+ pink:['Bleika saltvatnið í Torrevieja','Stærstu saltvötn Evrópu, annað bleikt og hitt grænt. Oft flamingóar. Fallegast við sólsetur.'],
+ torrexmas:['Jólaljós og hafnarganga í Torrevieja','Ljós í 70 götum og 22 m jólatré við hafnarinnganginn (2025). Gangið meðfram sjónum að kvöldi.'],
+ zenia:['Zenia Boulevard','Stóra verslunarmiðstöðin á svæðinu, góð þegar rignir síðdegis. Black Friday er 27. nóv.'],
+ caboroig:['Klettaganga í Cabo Roig og drykkur við sólsetur','Strandstígur milli víkanna að Cabo Roig-turninum, svo kvöldmatur á Cabo Roig-götunni.'],
+ guardamar:['Sandöldur og furuskógur í Guardamar','Stór furuskógur gróðursettur á sandöldum, með þægilegum gönguleiðum og Alfonso XIII-garðinum.'],
+ calblanque:['Calblanque-náttúrugarðurinn','Ósnortnar strendur og saltsléttur. Góður í þurra og sólríka göngu.'],
+ valor:['Valor-súkkulaðisafnið, Villajoyosa','Leiðsögn í um klukkustund um safnið og verksmiðjuna, með smakki. Bókið tíma fyrst.'],
+ vilacolor:['Litríku húsin í Villajoyosa','Röð af skærlituðum fiskimannahúsum við ströndina. Passar vel með súkkulaðisafninu.'],
+ altea:['Gamli bærinn í Altea','Hvítar götur upp að kirkjunni með bláa hvolfþakinu, sjávarútsýni og fullt af listmuna- og veitingastöðum.'],
+ guadalest:['Kastalaþorpið Guadalest','Miðaldaþorp á kletti, með kastala og grænbláu uppistöðulóni fyrir neðan. Gott að tengja við Altea.'],
+ jumilla:['Vínleiðin í Jumilla (vínhúsheimsókn)','Monastrell-rauðvín. Nokkur vínhús bjóða ferðir á ensku; Viña Elena hefur verið með daglega ferð kl. 11:30. Bókið fyrirfram og annað ykkar keyrir.'],
+ vlcmkt:['Mercado Central, Valencia','Stóri Art Nouveau-matarmarkaðurinn. Opið mán.–lau. kl. 7:30–15:00; farið fyrir kl. 11.'],
+ lonja:['La Lonja-silkihöllin, Valencia','Gotnesk kauphöll á heimsminjaskrá UNESCO með snúnum súlum, á móti markaðnum.'],
+ vlccat:['Dómkirkjan í Valencia og Miguelete-turninn','Kapella hins heilaga grals, og svo upp í klukkuturninn fyrir útsýni yfir gamla bæinn.'],
+ ruzafa:['Tapaskvöld í Ruzafa, Valencia','Mat- og barhverfi borgarinnar. Röltið um og prófið nokkra staði.'],
+ albufera:['Bátsferð og paella á Albufera, El Palmar','Fæðingarstaður paellunnar. Hefðbundinn bátur um lónið og svo hádegismatur í El Palmar. Visit Valencia selur bát og paellu saman (kl. 12:45, um €24).'],
+ cac:['Lista- og vísindaborgin, Valencia','Framtíðarlegar byggingar Calatrava í gamla árfarveginum. Ókeypis að ganga um svæðið.'],
+ alhambra:['Alhambra, Granada (önnur helgi)','Kaupið bara á opinberu síðunni (alhambra-patronato.es). Nasrid-hallirnar þurfa tímasettan miða og seljast upp vikum fyrirfram.'],
+ grtapas:['Ókeypis tapas í Granada (önnur helgi)','Á hefðbundnum börum í Granada fylgir enn ókeypis tapa hverjum drykk. Prófið Calle Navas, Elvira og Realejo.']};
+const P_IS={
+ '2026-11-23':['Komið og komið ykkur fyrir','Villamartín og Orihuela Costa','Verslið fyrir íbúðina og farið svo í rólega strandgöngu og fáið ykkur drykk við sólsetur nálægt heimilinu.'],
+ '2026-11-24':['Orihuela: markaður og gamli bærinn','Orihuela, 30 mín.','Þriðjudagsmarkaðurinn að morgni og svo minnisvarðar gamla bæjarins og hádegismatur þar. Gangan upp að kastalanum er best á þessum þurra degi.'],
+ '2026-11-25':['Murcia: matarhöll, Casino og jólaljós','Murcia, 45 mín.','Spáð er skúrum síðdegis, svo farið á markaðinn að morgni og verið inni í Casino og dómkirkjunni síðdegis. Verið áfram í tapas og jólaljósin.'],
+ '2026-11-26':['Cartagena: rómverska borgin og höfnin','Cartagena, 50 mín.','Líkur eru á rigningu síðdegis og rómverska leikhússafnið er að mestu innandyra. Ef morguninn er þurr er gott að borða í Cabo de Palos á leiðinni heim.'],
+ '2026-11-27':['Markaðurinn í Torrevieja og svo til Valencia','Torrevieja → Valencia, 2 klst.','Á föstudögum er stóri markaðurinn í Torrevieja. Keyrið norður eftir hádegi, skráið ykkur inn og eyðið kvöldinu í tapas í Ruzafa.'],
+ '2026-11-28':['Valencia: markaðir og gamli bærinn','Valencia (hótel)','Mercado Central er opinn á laugardagsmorgni. Rigning er möguleg eftir hádegi, svo geymið La Lonja og dómkirkjuna fyrir síðdegið.'],
+ '2026-11-29':['Paella á Albufera og svo heim','El Palmar → Villamartín','Sunnudagurinn lítur út fyrir sól. Farið í bátsferð um lónið og fáið ykkur paellu þar sem hún varð til, og keyrið svo heim (um 2 klst.).'],
+ '2026-11-30':['Elche: pálmar og gamli bærinn','Elche, 45 mín.','Pálmagarðarnir, kirkjan og ofnbökuð hrísgrjón í hádeginu. Athugið hvort kveikt verður á jólaljósunum um þetta leyti.'],
+ '2026-12-01':['Alicante: kastali, markaður og strönd','Alicante, 50 mín.','Markaðurinn að morgni, kastalinn með lyftu og svo Explanada. Á lygnum degi er hægt að fara til Tabarca í staðinn (kl. 12–16).'],
+ '2026-12-02':['Súkkulaði og hvítir bæir','Villajoyosa og Altea, 75–90 mín.','Lengri bíltúr norður: Valor-súkkulaðisafnið, litríku húsin og svo Altea. Vínhúsin í Jumilla eru annar kostur.'],
+ '2026-12-03':['Síðasti morgunninn','Orihuela Costa','Takið því rólega: kaffi, síðasta strandgangan og pakka niður.']};
+const H_IS=[
+ ['Venecia Plaza Centro','Gamli bærinn í Valencia','Mjög miðsvæðis, við ráðhústorgið, og vel metið. Athugið verðið fyrir 27.–29. nóv.'],
+ ['One Shot Palacio Reina Victoria 04','Gamli bærinn í Valencia','Lítið og hagstætt hótel í gamla bænum, í göngufæri við allt.'],
+ ['Leit: gamli bærinn í Valencia undir €120','Booking.com','2 fullorðnir, fös. 27. – sun. 29. nóv., síað við €120 nóttina.'],
+ ['Granada í staðinn? Hotel Macià Plaza / Eurostars Gran Vía','Miðbær Granada','Bæði nálægt Plaza Nueva á miðlungsverði. Spáin fyrir Granada: rigning lau. 28. og aksturinn er um 3,5 klst. Bara þess virði ef þið fáið miða í Alhambra.']];
+
+let LANG='is';try{LANG=localStorage.getItem('villamartin-lang')||'is'}catch(e){}
+const U=(k,v={})=>UI[LANG][k].replace(/\{(\w+)\}/g,(m,x)=>v[x]??'');
+const nm=x=>LANG==='is'&&A_IS[x.id]?A_IS[x.id][0]:x.n;
+const tt=x=>LANG==='is'&&A_IS[x.id]?A_IS[x.id][1]:x.t;
+const catN=c=>LANG==='is'?(CAT_IS[c]||c):c;
+const pd=(d,i,f)=>LANG==='is'&&P_IS[d.date]?P_IS[d.date][i]:d[f];
+const phT=p=>LANG==='is'?(PH_IS[p]||p):p;
 
 /* ---------- activities (d = drive minutes, rough; open = weekdays 0 Sun..6 Sat, omitted = every day) ---------- */
 const A=[
@@ -212,7 +305,7 @@ const HOTELS=[
 const DN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const dObj=s=>new Date(s+'T12:00:00');
 const wd=s=>dObj(s).getDay();
-const fmt=s=>{const d=dObj(s);return DN[d.getDay()]+' '+d.getDate()+' '+d.toLocaleString('en',{month:'short'})};
+const fmt=s=>{const d=dObj(s);return LANG==='is'?DN_IS[d.getDay()]+' '+d.getDate()+'. '+MON_IS[d.getMonth()]:DN[d.getDay()]+' '+d.getDate()+' '+d.toLocaleString('en',{month:'short'})};
 function kindFromCode(c){if(c==null)return'cloud';if(c<=1)return'sun';if(c===2)return'suncloud';if(c===3)return'cloud';if(c===45||c===48)return'fog';if(c>=95)return'thunder';if((c>=71&&c<=77)||c===85||c===86)return'snow';if(c>=51)return'rain';return'cloud'}
 function icon(k){
  const C='<path d="M18 46h30a10 10 0 0 0 0-20a14 14 0 0 0-26-4a11 11 0 0 0-4 24z" fill="#b9c8d2"/>';
@@ -258,48 +351,48 @@ function renderDays(){
  $('days').innerHTML=P.map((d,i)=>{const w=wxFor(d.date);return `<button type="button" class="day${i===cur?' on':''}${d.hotel?' hotel':''}" data-i="${i}" aria-pressed="${i===cur}"><b>${fmt(d.date).split(' ')[0]}</b><span class="dt">${dObj(d.date).getDate()}</span>${w?icon(w.k):icon('cloud')}<span class="t">${w?w.hi+'° / '+w.lo+'°':'–'}</span></button>`}).join('');
 }
 function itemHtml(x,n,kind,date){
- const open=x.open?'Open '+x.open.map(i=>DN[i]).join(', '):'';
+ const open=x.open?U('open')+' '+x.open.map(i=>(LANG==='is'?DN_IS:DN)[i]).join(', '):'';
  const closed=!isOpen(x,date);
- return `<li class="item${kind==='plan'?' plan':''}"><span class="num">${n}</span><div><h4>${esc(x.n)}</h4><p>${esc(x.t)}</p>
- <div class="meta">${kind==='plan'?'<span class="chip planned">In the plan</span>':''}${kind==='added'?'<span class="chip planned">Added by you</span>':''}<span class="chip">${esc(x.c)}</span><span class="chip">${esc(x.a)} · ~${x.d} min</span>${x.in?'<span class="chip in">Indoors / rain-OK</span>':''}${open?`<span class="chip">${open}</span>`:''}${closed?'<span class="chip warn">Not on this weekday</span>':''}</div>
- <div class="links">${x.ul==='Map'?'':`<a href="${esc(x.u)}" target="_blank" rel="noopener">${esc(x.ul||'Website')}</a>`}<a href="${esc(map(x.q))}" target="_blank" rel="noopener">Directions</a>${kind==='added'?`<button type="button" data-rm="${x.id}">Remove</button>`:''}</div></div></li>`;
+ return `<li class="item${kind==='plan'?' plan':''}"><span class="num">${n}</span><div><h4>${esc(nm(x))}</h4><p>${esc(tt(x))}</p>
+ <div class="meta">${kind==='plan'?`<span class="chip planned">${U('inPlan')}</span>`:''}${kind==='added'?`<span class="chip planned">${U('added')}</span>`:''}<span class="chip">${esc(catN(x.c))}</span><span class="chip">${esc(x.a)} · ~${x.d} ${U('min')}</span>${x.in?`<span class="chip in">${U('indoor')}</span>`:''}${open?`<span class="chip">${open}</span>`:''}${closed&&kind!=='all'?`<span class="chip warn">${U('closed')}</span>`:''}</div>
+ <div class="links">${x.ul==='Map'?'':`<a href="${esc(x.u)}" target="_blank" rel="noopener">${U(x.ul==='Info'?'info':'website')}</a>`}<a href="${esc(map(x.q))}" target="_blank" rel="noopener">${U('dir')}</a>${kind==='added'?`<button type="button" data-rm="${x.id}">${U('remove')}</button>`:''}</div></div></li>`;
 }
 function renderDay(){
  const d=P[cur],w=wxFor(d.date),r=ranked(d);
- $('dTitle').textContent=fmt(d.date)+': '+d.title;
- $('dArea').textContent=d.area;
- let notes=`<p class="lead">${esc(d.lead)}</p>`;
- if(d.hotel)notes+=`<div class="note"><b>Hotel night in ${esc(d.hotel)}.</b> See the weekend hotels below.</div>`;
- if(r.wet)notes+=`<div class="note rain"><b>Rain likely (${w.p}%).</b> Indoor options are ranked higher today.</div>`;
+ $('dTitle').textContent=fmt(d.date)+': '+pd(d,0,'title');
+ $('dArea').textContent=pd(d,1,'area');
+ let notes=`<p class="lead">${esc(pd(d,2,'lead'))}</p>`;
+ if(d.hotel)notes+=`<div class="note">${U('hotelNight',{c:esc(d.hotel)})}</div>`;
+ if(r.wet)notes+=`<div class="note rain">${U('rainLikely',{p:w.p})}</div>`;
  $('dNotes').innerHTML=notes;
  const all=[...r.plan.map(x=>[x,'plan']),...r.added.map(x=>[x,'added']),...r.rest.map(x=>[x,'rest'])].slice(0,50);
  const shown=showAll?all:all.slice(0,10);
- $('picksTitle').textContent=showAll?`All suggestions (${all.length})`:'Top 10 picks';
+ $('picksTitle').textContent=showAll?U('allSug',{n:all.length}):U('top10');
  $('picks').innerHTML=shown.map(([x,k],i)=>itemHtml(x,i+1,k,d.date)).join('');
- $('moreBtn').textContent=showAll?'Show top 10 only':`Show all ${all.length} suggestions`;
+ $('moreBtn').textContent=showAll?U('showTop'):U('showAll',{n:all.length});
  const inDay=new Set([...d.ids,...(adds[d.date]||[])]);
- $('addSel').innerHTML=A.filter(x=>!inDay.has(x.id)).map(x=>`<option value="${x.id}">${esc(x.n)} (${esc(x.a)})</option>`).join('');
+ $('addSel').innerHTML=A.filter(x=>!inDay.has(x.id)).map(x=>`<option value="${x.id}">${esc(nm(x))} (${esc(x.a)})</option>`).join('');
  renderWx(d,w);
 }
 function renderWx(d,w){
- if(!w){$('wx').innerHTML=`<p class="ph">No forecast for ${fmt(d.date)} yet. It will appear once it is within the forecast range and the page is online.</p>`;return}
- $('wx').innerHTML=`<div class="big">${icon(w.k)}<div><div class="tt">${w.hi}° <span class="ph" style="font-size:20px">/ ${w.lo}°</span></div><div class="ph">${esc(w.ph)}</div></div></div>
- <dl><div><dt>Rain chance</dt><dd>${w.p}%</dd></div>${w.wind!=null?`<div><dt>Max wind</dt><dd>${Math.round(w.wind)} km/h</dd></div>`:''}</dl>
- <p class="src">${w.src==='live'?'Live forecast from Open-Meteo for Villamartín.':'AccuWeather forecast snapshot from 20 Nov.'+(d.hotel||d.date==='2026-11-29'?' Shown for Valencia.':'')}</p>`;
+ if(!w){$('wx').innerHTML=`<p class="ph">${U('noWx',{d:fmt(d.date)})}</p>`;return}
+ $('wx').innerHTML=`<div class="big">${icon(w.k)}<div><div class="tt">${w.hi}° <span class="ph" style="font-size:20px">/ ${w.lo}°</span></div><div class="ph">${esc(phT(w.ph))}</div></div></div>
+ <dl><div><dt>${U('rain')}</dt><dd>${w.p}%</dd></div>${w.wind!=null?`<div><dt>${U('wind')}</dt><dd>${Math.round(w.wind)} km/h</dd></div>`:''}</dl>
+ <p class="src">${w.src==='live'?U('live'):U('snap')+(d.hotel||d.date==='2026-11-29'?U('snapV'):'')}</p>`;
 }
 function renderAll(){
  const c=$('catSel').value;
  const list=A.filter(x=>!c||x.c===c).sort((a,b)=>a.d-b.d);
- $('all').innerHTML=list.map((x,i)=>itemHtml(x,i+1,'rest',P[cur].date).replace('<span class="chip warn">Not on this weekday</span>','')).join('');
+ $('all').innerHTML=list.map((x,i)=>itemHtml(x,i+1,'all',P[cur].date)).join('');
 }
 function renderHotels(){
- $('hotels').innerHTML=HOTELS.map(h=>`<div class="hcard"><h4>${esc(h.n)}</h4><p class="small">${esc(h.c)}</p><p>${esc(h.t)}</p><p><a href="${esc(h.u)}" target="_blank" rel="noopener">Check prices</a></p></div>`).join('')+
- `<div class="hcard"><h4>Why Valencia this weekend</h4><p>On Sat 28 Valencia has a lighter rain risk (56%) than Granada (65%, about 10 mm). The Mercado Central is open on Saturday, and Sunday looks sunny for the Albufera. The drive is 2 h instead of 3.5 h.</p></div>`;
+ $('hotels').innerHTML=HOTELS.map((h,i)=>{const t=LANG==='is'?H_IS[i]:[h.n,h.c,h.t];return `<div class="hcard"><h4>${esc(t[0])}</h4><p class="small">${esc(t[1])}</p><p>${esc(t[2])}</p><p><a href="${esc(h.u)}" target="_blank" rel="noopener">${U('check')}</a></p></div>`}).join('')+
+ `<div class="hcard"><h4>${U('whyT')}</h4><p>${U('why')}</p></div>`;
 }
 function renderCount(){
  const now=new Date(),start=dObj('2026-11-23'),end=dObj('2026-12-03');
  const days=Math.ceil((start-now)/864e5);
- $('count').textContent=days>0?`${days} day${days>1?'s':''} to go`:now<=end?'You are there. Enjoy!':'Trip finished';
+ $('count').textContent=days>1?U('toGo',{n:days}):days===1?U('toGo1'):now<=end?U('there'):U('over');
 }
 function sources(){
  const s=[['AccuWeather forecast via Claude connector (20 Nov)',''],['Open-Meteo live forecast','https://open-meteo.com/'],['Markets: mercadillos.org','https://mercadillos.org/en/vega-baja'],['Torrevieja market: Casas Palmeras','https://casaspalmeras.com/en/markets-on-the-costa-blanca.html?p=97'],['Murcia lights 2026: Euro Weekly News','https://euroweeklynews.com/2026/11/14/spain-looks-to-christmas-for-a-little-light-after-a-difficult-year-as-vigo-officially-lights-up-its-streets/'],['Cartagena Puerto de Culturas','https://puertodeculturas.cartagena.es/horarios_tarifas.asp?idioma=2'],['Real Casino de Murcia: spain.info','https://www.spain.info/en/activities/tourist-visit-real-casino-murcia/'],['Valencia Mercado Central: Visit Valencia','https://www.visitvalencia.com/en/what-to-do-valencia/valencian-culture/monuments-in-valencia/central-market'],['Tabarca winter boats: Alicante Turismo','https://alicanteturismo.com/en/tabarca-island/'],['Alhambra official FAQ','https://www.alhambra-patronato.es/en/visit/faq']];
@@ -327,9 +420,17 @@ $('picks').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if
 $('catSel').addEventListener('change',renderAll);
 
 const cats=[...new Set(A.map(x=>x.c))];
-$('catSel').innerHTML='<option value="">All types</option>'+cats.map(c=>`<option>${c}</option>`).join('');
+function statics(){
+ document.documentElement.lang=LANG;
+ $('hTitle').textContent=U('title');$('hSub').textContent=U('sub');$('langBtn').textContent=U('lang');
+ $('days').setAttribute('aria-label',U('days'));$('addLbl').textContent=U('addLbl');$('addBtn').textContent=U('add');
+ $('hotelsH').textContent=U('hotels');$('allH').textContent=U('allAct');$('footP').textContent=U('foot');$('srcH').textContent=U('sources');
+ const cv=$('catSel').value;$('catSel').setAttribute('aria-label',U('filter'));$('catSel').innerHTML=`<option value="">${U('allTypes')}</option>`+cats.map(c=>`<option value="${c}">${catN(c)}</option>`).join('');$('catSel').value=cv;
+}
+function renderAllViews(){statics();renderCount();renderDays();renderDay();renderHotels();renderAll()}
+$('langBtn').addEventListener('click',()=>{LANG=LANG==='is'?'en':'is';try{localStorage.setItem('villamartin-lang',LANG)}catch(e){}renderAllViews()});
 cur=pickToday();
-renderCount();renderDays();renderDay();renderHotels();renderAll();sources();live();
+renderAllViews();sources();live();
 }
 </script>
 </body>
