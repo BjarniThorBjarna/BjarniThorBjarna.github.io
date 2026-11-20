@@ -2,13 +2,71 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>My website</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b1d3a">
+  <title>My apps</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100svh;
+      color: #fff;
+      background: radial-gradient(ellipse at top left, #275a92, transparent 65%),
+        radial-gradient(ellipse at bottom right, #283b72, transparent 65%), #0b1d3a;
+    }
+    main {
+      max-width: 900px;
+      margin: auto;
+      padding: max(48px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
+        max(48px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    }
+    h1 { margin: 0; font-size: clamp(32px, 6vw, 48px); font-weight: 600; letter-spacing: -.04em; }
+    p { margin: 10px 0 36px; color: #bfcee4; }
+    .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 24px; }
+    .app {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      border-radius: 24px;
+      color: inherit;
+      text-decoration: none;
+      text-align: center;
+    }
+    .app:hover { background: #ffffff0d; }
+    .app:focus-visible { outline: 3px solid #ffd166; outline-offset: 4px; }
+    .icon {
+      display: grid;
+      place-items: center;
+      width: 96px;
+      height: 96px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, #55c5ff, #1666d8);
+      border: 1px solid #ffffff40;
+      box-shadow: 0 12px 28px #00000030, inset 0 1px 0 #ffffff50;
+    }
+    .app-name { font-size: 15px; font-weight: 500; }
+  </style>
 </head>
 <body>
   <main>
-    <h1>My website</h1>
-    <p>Replace this page with your own HTML, or add more HTML files to this repository.</p>
+    <h1>My apps</h1>
+    <p>Your own little home screen. Tap an app to open it.</p>
+    <nav class="apps" aria-label="Apps">
+      <a class="app" href="my-weather.html">
+        <span class="icon">
+          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
+            <path d="M28 7v5M28 44v5M7 28h5M44 28h5M13 13l4 4M39 39l4 4M13 43l4-4M39 17l4-4"
+              stroke="#ffe59b" stroke-width="3" stroke-linecap="round"/>
+            <circle cx="28" cy="28" r="12" fill="#ffd166"/>
+            <path d="M27 57h27a11 11 0 0 0 1-22 14 14 0 0 0-26-4 13 13 0 0 0-2 26Z" fill="#fff"/>
+          </svg>
+        </span>
+        <span class="app-name">My weather</span>
+      </a>
+    </nav>
   </main>
 </body>
 </html>

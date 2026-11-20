@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b1d3a">
+<title>My weather</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE: modern weather app, cinematic and playful, glanceable
+   IDEA: a living postcard of each home: Mediterranean coast / Icelandic harbour, under the real sky right now
+   PICTURE: full-screen illustrated scene, sun moving along its real arc, animated rain/snow/stars/aurora/lightning
+   COLOUR and TYPE: sky decides everything; frosted glass panels, white text; Outfit throughout
+   LAYOUT: hero temp over the sky, then glass cards: measured now, hourly strip, detail tiles, 7 days */
+:root{color-scheme:dark;--glass:rgba(255,255,255,.13);--glass2:rgba(255,255,255,.2);--edge:rgba(255,255,255,.24);--ink:#fff;--mute:rgba(255,255,255,.72);--accent:#ffd166}
+*{box-sizing:border-box;min-width:0}
+html{background:#0b1d3a}
+body{margin:0;color:var(--ink);font:16px/1.5 Outfit,system-ui,sans-serif;overflow-x:clip;-webkit-font-smoothing:antialiased;min-height:100vh}
+.bg{position:fixed;inset:0;z-index:0;overflow:hidden;background:#0b1d3a}
+.bg svg,.bg canvas{position:absolute;inset:0;width:100%;height:100%}
+.bg svg{animation:fade .9s ease}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 55%,rgba(4,10,25,.55) 100%)}
+.app{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:max(14px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.top{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.seg{display:flex;gap:4px;padding:4px;border-radius:999px;background:rgba(10,20,40,.28);border:1px solid var(--edge);backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%)}
+.seg button{font:500 15px Outfit,system-ui,sans-serif;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:none;color:#fff;cursor:pointer;white-space:nowrap;transition:background .25s,color .25s}
+.seg button[aria-pressed=true]{background:#fff;color:#0b1d3a}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hero{text-align:center;padding:clamp(28px,7vh,72px) 0 clamp(28px,8vh,90px);text-shadow:0 2px 24px rgba(0,0,0,.25)}
+@media(max-width:899px) and (orientation:portrait){.hero{min-height:calc(78svh - 60px);padding-top:clamp(20px,5vh,48px)}}
+.place{display:inline-flex;align-items:center;gap:6px;font-size:15px;color:var(--mute)}
+.place svg{flex:none}
+h1{margin:4px 0 0;font-size:clamp(26px,4.5vw,40px);font-weight:500;line-height:1.1;text-wrap:balance}
+.temp{font-size:clamp(104px,26vw,190px);font-weight:200;line-height:.95;letter-spacing:-.04em;margin:6px 0 0;display:inline-flex;align-items:flex-start;justify-content:center;min-height:1em}
+.temp sup{font-size:.42em;font-weight:300;margin-top:.12em;margin-left:.02em}
+.cond{display:flex;align-items:center;justify-content:center;gap:10px;font-size:22px;font-weight:400}
+.hl{font-size:17px;color:var(--mute);margin-top:2px}
+.grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"flight" "obs" "hourly" "tiles" "days";gap:16px}
+@media(min-width:900px){.grid{grid-template-columns:minmax(0,5fr) minmax(0,7fr);grid-template-areas:"flight flight" "obs hourly" "days tiles";align-items:start}}
+.glass{background:var(--glass);border:1px solid var(--edge);border-radius:26px;backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);box-shadow:0 12px 40px rgba(0,10,30,.18),inset 0 1px 0 rgba(255,255,255,.18);padding:18px 18px 20px}
+.lbl{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--mute);margin:0 0 10px}
+.lbl svg{flex:none;opacity:.85}
+h2.lbl{font-size:14px}
+.live{width:8px;height:8px;border-radius:50%;background:#4ade80;box-shadow:0 0 0 0 rgba(74,222,128,.6);animation:pulse 2s infinite}
+.obs .row{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.obs .t{font-size:64px;font-weight:200;line-height:1}
+.obs .sub{font-size:14px;color:var(--mute);margin:-4px 0 12px}
+.mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 16px;flex:1 1 220px}
+.mini b{display:block;font-size:18px;font-weight:500;white-space:nowrap}
+.mini span{font-size:13px;color:var(--mute)}
+.obs .diff{margin-top:14px;font-size:14px;color:var(--mute)}
+.obs details{margin-top:8px;font-size:13px;color:var(--mute)}
+.obs summary{cursor:pointer;min-height:32px;display:inline-flex;align-items:center}
+.obs code{font-size:12px;overflow-wrap:anywhere}
+.hours{display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 2px 6px;margin:0 -4px;scrollbar-width:none}
+.hours::-webkit-scrollbar{display:none}
+.hr{flex:none;scroll-snap-align:start;width:66px;display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 4px;border-radius:20px;font-size:15px}
+.hr.now{background:var(--glass2);border:1px solid var(--edge)}
+.hr .h{font-size:13px;color:var(--mute);white-space:nowrap}
+.hr .tt{font-size:19px;font-weight:500}
+.hr .p{font-size:12px;color:#9bd4ff;min-height:18px}
+.spark{display:block;width:100%;height:46px;margin-top:4px}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{min-height:150px;display:flex;flex-direction:column;padding:16px}
+.tile .v{font-size:32px;font-weight:300;line-height:1.1}
+.tile .v small{font-size:16px;color:var(--mute);margin-left:3px}
+.tile .s{font-size:13px;color:var(--mute);margin-top:auto;padding-top:8px}
+.tile.wide,.tile.seat{grid-column:span 2}
+@media(min-width:600px){.tile.seat{grid-column:auto}}
+.compass{display:flex;align-items:center;gap:14px}
+.compass svg{flex:none}
+.uvbar{height:6px;border-radius:3px;background:linear-gradient(90deg,#4ade80,#facc15,#fb923c,#ef4444,#a855f7);position:relative;margin-top:12px}
+.uvbar i{position:absolute;top:50%;width:12px;height:12px;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.35);transform:translate(-50%,-50%)}
+.days{list-style:none;margin:0;padding:0}
+.days li{display:grid;grid-template-columns:minmax(4.5em,6.5em) 32px 2.8em minmax(0,1fr) 2.8em;align-items:center;gap:10px;padding:10px 0;border-top:1px solid rgba(255,255,255,.14)}
+.days li:first-child{border-top:0}
+.dn{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dn small{display:block;font-weight:400;font-size:12px;color:#9bd4ff;min-height:16px}
+.lo{color:var(--mute);text-align:right;white-space:nowrap}.hi{font-weight:500;white-space:nowrap}
+.rng{height:6px;border-radius:3px;background:rgba(255,255,255,.18);position:relative}
+.rng i{position:absolute;top:0;bottom:0;border-radius:3px;background:linear-gradient(90deg,#7dd3fc,#fde047,#fb923c)}
+.flight{display:grid;grid-template-columns:minmax(0,1fr);gap:18px}
+@media(min-width:900px){.flight{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:center}}
+.cd{display:flex;gap:10px}
+.cd div{flex:1 1 0;text-align:center;background:rgba(255,255,255,.12);border:1px solid var(--edge);border-radius:18px;padding:10px 4px}
+.cd b{display:block;font-size:clamp(34px,9vw,52px);font-weight:300;line-height:1.05;font-variant-numeric:tabular-nums}
+.cd span{font-size:13px;color:var(--mute)}
+.fstate{font-size:18px;font-weight:500;margin:0 0 10px}
+.route{position:relative;height:56px;margin:4px 8px 0}
+.route .ln{position:absolute;top:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.3)}
+.route .ln.lay{background:repeating-linear-gradient(90deg,rgba(255,255,255,.4) 0 5px,transparent 5px 10px)}
+.route .done{position:absolute;top:22px;left:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#ffd166,#fb923c)}
+.route .stop{position:absolute;top:16px;width:15px;height:15px;margin-left:-7.5px;border-radius:50%;background:#fff;border:3px solid rgba(11,29,58,.5)}
+.route .code{position:absolute;top:36px;transform:translateX(-50%);font-size:13px;font-weight:600;white-space:nowrap}
+.route .plane{position:absolute;top:8px;margin-left:-15px;transition:left 1s linear;filter:drop-shadow(0 2px 6px rgba(0,0,0,.35))}
+.legs{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px;font-size:14px}
+.legs div{background:rgba(255,255,255,.1);border-radius:14px;padding:10px 12px}
+.legs b{font-weight:600}.legs small{display:block;color:var(--mute);font-size:13px}
+.fnote{font-size:13px;color:var(--mute);margin-top:10px}
+.fwx{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:10px}
+.fwx div{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border-radius:14px;padding:8px 12px;font-size:14px}
+.fwx small{display:block;color:var(--mute);font-size:12px}
+@media(max-width:420px){.legs,.fwx{grid-template-columns:minmax(0,1fr)}}
+.foot{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin-top:18px;font-size:13px;color:var(--mute)}
+.foot button{font:500 14px Outfit,system-ui,sans-serif;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--edge);background:var(--glass);color:#fff;cursor:pointer;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:inline-flex;align-items:center;gap:8px}
+.err{background:rgba(255,80,110,.25);border:1px solid rgba(255,140,160,.5);padding:14px 18px;border-radius:18px;margin-bottom:16px;display:none;backdrop-filter:blur(16px)}
+.note{margin:0;color:var(--mute)}
+.skel{display:inline-block;width:1.4em;height:.8em;border-radius:.2em;background:rgba(255,255,255,.18);animation:blink 1.4s infinite}
+/* motion */
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(74,222,128,.6)}70%{box-shadow:0 0 0 10px rgba(74,222,128,0)}100%{box-shadow:0 0 0 0 rgba(74,222,128,0)}}
+@keyframes blink{50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{from{transform:translateX(-30vw)}to{transform:translateX(130vw)}}
+@keyframes drift2{from{transform:translateX(0)}to{transform:translateX(-240px)}}
+@keyframes sway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
+@keyframes aur{0%,100%{transform:translateX(0) skewX(0);opacity:.55}50%{transform:translateX(-60px) skewX(-8deg);opacity:.95}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes drop{0%{transform:translateY(-4px);opacity:0}30%{opacity:1}100%{transform:translateY(6px);opacity:0}}
+@keyframes glint{0%,100%{opacity:.15}50%{opacity:.8}}
+@keyframes beam{0%,100%{opacity:.05}50%{opacity:.5}}
+.spin{animation:spin 60s linear infinite;transform-box:fill-box;transform-origin:center}
+.cloud{animation:drift linear infinite}
+.wave{animation:drift2 7s linear infinite}
+.sway{animation:sway 5s ease-in-out infinite;transform-box:fill-box;transform-origin:50% 100%}
+.aur{animation:aur 9s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.glint{animation:glint 3s ease-in-out infinite}
+.beam{animation:beam 4s ease-in-out infinite}
+.ic .bob{animation:bob 3s ease-in-out infinite}
+.ic .dr{animation:drop 1.2s linear infinite}
+.ic .rays{animation:spin 18s linear infinite;transform-box:fill-box;transform-origin:center}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+@media(max-width:420px){.seg button{padding:0 12px;font-size:14px}.glass{padding:16px}.days li{gap:8px}}
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <svg id="scene" preserveAspectRatio="xMidYMax slice" viewBox="0 0 1600 1000"></svg>
+  <canvas id="fx"></canvas>
+  <div class="flash" id="flash"></div>
+  <div class="shade"></div>
+</div>
+
+<div class="app">
+  <nav class="top">
+    <div class="seg" role="group" id="locSeg">
+      <button type="button" data-loc="spain" aria-pressed="false"></button>
+      <button type="button" data-loc="iceland" aria-pressed="false"></button>
+    </div>
+    <div class="seg" role="group" id="langSeg">
+      <button type="button" data-lang="is" aria-pressed="false" lang="is">IS</button>
+      <button type="button" data-lang="en" aria-pressed="false" lang="en">EN</button>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="place"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg><span id="place"></span></div>
+    <h1 id="title">&nbsp;</h1>
+    <div class="temp" id="temp"><span class="skel"></span></div>
+    <div class="cond" id="cond">&nbsp;</div>
+    <div class="hl" id="hl">&nbsp;</div>
+  </header>
+
+  <div class="err" id="err" role="alert"></div>
+
+  <main class="grid">
+    <section class="glass flight" style="grid-area:flight" id="flight" hidden></section>
+    <section class="glass obs" style="grid-area:obs">
+      <h2 class="lbl"><span class="live"></span><span data-t="measured"></span></h2>
+      <div class="sub" id="obsSub"></div>
+      <div id="obsBody"></div>
+    </section>
+
+    <section class="glass" style="grid-area:hourly">
+      <h2 class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-t="next24"></span></h2>
+      <div class="hours" id="hours"></div>
+      <svg class="spark" id="spark" aria-hidden="true"></svg>
+    </section>
+
+    <section style="grid-area:tiles" class="tiles" id="tiles"></section>
+
+    <section class="glass" style="grid-area:days">
+      <h2 class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span data-t="days7"></span></h2>
+      <ul class="days" id="days"></ul>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="upd"></span>
+    <button id="refresh" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg><span data-t="refresh"></span></button>
+  </footer>
+</div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const r=n=>Math.round(n);
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const hm=s=>s.slice(11,16);
+const mins=s=>+s.slice(11,13)*60+ +s.slice(14,16);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- text ---------- */
+const TXT={
+en:{loading:'Loading the weather…',unavail:'Weather unavailable',hl:(a,b)=>`H ${b}°  ·  L ${a}°`,
+  wind:'Wind',gusts:'Gusts',hum:'Humidity',pres:'Pressure',feels:'Feels like',uv:'UV index',sky:'Sky',calm:'Calm',rain1h:'Rain, last hour',
+  rainToday:'Rain today',dew:t=>`Dew point ${t}°`,feelsS:(f,t)=>f<t-1?'Wind makes it feel colder':f>t+1?'Humidity makes it feel warmer':'Similar to the actual temperature',
+  sun:'Sun',daylight:(h,m)=>`${h} h ${m} min of daylight`,sunrise:'Sunrise',sunset:'Sunset',sea:'Sea',seaS:w=>`Waves ${w} m`,
+  presS:p=>p<1000?'Low pressure':p>1022?'High pressure':'Normal',uvS:u=>u<3?'Low':u<6?'Moderate':u<8?'High':u<11?'Very high':'Extreme',
+  rainS:p=>`${p}% chance today`,gustS:g=>`Gusts ${g} m/s`,
+  measured:'Measured now',next24:'Next 24 hours',days7:'7-day forecast',refresh:'Refresh',now:'Now',today:'Today',tomorrow:'Tomorrow',
+  nearest:'Nearest weather station',obsLoading:'Loading…',
+  upd:t=>`Updated ${t} · Forecast Open-Meteo.com · refreshes every 15 min`,
+  err:m=>`Could not load the weather (${m}). If you opened this inside the Claude app preview, download the file and open it in Chrome, Edge or Safari instead — the preview blocks internet access.`,
+  obsErr:m=>`Could not get the measured weather right now (${m}). It will try again at the next refresh.`,
+  ago:(t,m)=>`${t} · ${m} min ago`,
+  metarSub:(n,dist,w)=>`${n}, ${dist} · ${w}`,
+  vedurSub:(n,w)=>`Icelandic Met Office, ${n} · ${w}`,
+  diff:t=>`The forecast model estimates ${t}° at the address itself.`,
+  raw:'Show raw airport report',vedurNote:' Data: vedur.is',
+  noRecent:'no recent reading',locale:'en-GB',dirs:['N','NE','E','SE','S','SW','W','NW'],card:['N','E','S','W'],
+  skyM:{CLR:'Clear',FEW:'A few clouds',SCT:'Partly cloudy',BKN:'Mostly cloudy',OVC:'Overcast'},
+  wx:{RA:'rain',DZ:'drizzle',SHRA:'rain showers',TS:'thunderstorm',TSRA:'thunderstorm with rain',FG:'fog',BR:'mist',HZ:'haze',SN:'snow',GR:'hail',DU:'dust',SA:'sand'},light:'light ',heavy:'heavy ',
+  codes:{0:'Clear sky',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Fog',48:'Freezing fog',51:'Light drizzle',53:'Drizzle',55:'Heavy drizzle',56:'Freezing drizzle',57:'Freezing drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',66:'Freezing rain',67:'Freezing rain',71:'Light snow',73:'Snow',75:'Heavy snow',77:'Snow grains',80:'Light showers',81:'Showers',82:'Violent showers',85:'Snow showers',86:'Snow showers',95:'Thunderstorm',96:'Thunderstorm with hail',99:'Thunderstorm with hail'},
+  locs:{spain:{btn:'Spain',place:'Villamartín, Orihuela Costa · Spain'},iceland:{btn:'Iceland',place:'221 Hafnarfjörður · Iceland'}},
+  st:{LELC:['San Javier airport','20 km south'],LEAL:['Alicante airport','50 km north']},
+  locGroup:'Choose location',langGroup:'Choose language',
+  fl:{title:'Flight to Spain',units:['days','hours','min','sec'],before:'Departure in',leg1:'In the air to London · landing in',lay:'Layover at Gatwick · next flight in',leg2:'In the air to Alicante · landing in',landed:'Welcome to Spain! You have landed',
+    note:'Self-transfer at Gatwick (2 h 30 min): collect your bags and check in again for U2 8111.',wx:'Weather on 23 Nov',dep:'Hafnarfjörður',arr:'Villamartín'}},
+is:{loading:'Sæki veðrið…',unavail:'Veður ekki tiltækt',hl:(a,b)=>`Hæst ${b}°  ·  Lægst ${a}°`,
+  wind:'Vindur',gusts:'Hviður',hum:'Rakastig',pres:'Loftþrýstingur',feels:'Finnst eins og',uv:'UV-stuðull',sky:'Himinn',calm:'Logn',rain1h:'Úrkoma síðustu klst.',
+  rainToday:'Úrkoma í dag',dew:t=>`Daggarmark ${t}°`,feelsS:(f,t)=>f<t-1?'Vindurinn kælir':f>t+1?'Rakinn gerir hlýrra':'Svipað og raunhiti',
+  sun:'Sól',daylight:(h,m)=>`Birta í ${h} klst. ${m} mín.`,sunrise:'Sólarupprás',sunset:'Sólsetur',sea:'Sjór',seaS:w=>`Ölduhæð ${w} m`,
+  presS:p=>p<1000?'Lágþrýstingur':p>1022?'Hæð':'Eðlilegur',uvS:u=>u<3?'Lágur':u<6?'Miðlungs':u<8?'Hár':u<11?'Mjög hár':'Gífurlegur',
+  rainS:p=>`${p}% líkur í dag`,gustS:g=>`Hviður ${g} m/s`,
+  measured:'Mælt núna',next24:'Næstu 24 klukkustundir',days7:'Spá næstu 7 daga',refresh:'Uppfæra',now:'Núna',today:'Í dag',tomorrow:'Á morgun',
+  nearest:'Næsta veðurstöð',obsLoading:'Sæki…',
+  upd:t=>`Uppfært kl. ${t} · Spá frá Open-Meteo.com · uppfærist á 15 mín. fresti`,
+  err:m=>`Ekki tókst að sækja veðrið (${m}). Ef þú opnaðir síðuna í forskoðun Claude-appsins skaltu sækja skrána og opna hana í Chrome, Edge eða Safari, því forskoðunin lokar á netsamband.`,
+  obsErr:m=>`Ekki tókst að sækja mælingar núna (${m}). Reynt verður aftur við næstu uppfærslu.`,
+  ago:(t,m)=>`kl. ${t} · fyrir ${m} mín.`,
+  metarSub:(n,dist,w)=>`${n}, ${dist} · ${w}`,
+  vedurSub:(n,w)=>`Veðurstofa Íslands, ${n} · ${w}`,
+  diff:t=>`Spálíkanið áætlar ${t}° við heimilisfangið sjálft.`,
+  raw:'Sýna upprunalegt flugveðurskeyti',vedurNote:' Gögn: vedur.is',
+  noRecent:'engin nýleg mæling',locale:'is-IS',dirs:['N','NA','A','SA','S','SV','V','NV'],card:['N','A','S','V'],
+  skyM:{CLR:'Heiðskírt',FEW:'Léttskýjað',SCT:'Hálfskýjað',BKN:'Skýjað',OVC:'Alskýjað'},
+  wx:{RA:'rigning',DZ:'súld',SHRA:'skúrir',TS:'þrumuveður',TSRA:'þrumuveður með rigningu',FG:'þoka',BR:'þokumóða',HZ:'mistur',SN:'snjókoma',GR:'hagl',DU:'ryk',SA:'sandfok'},light:'lítils háttar ',heavy:'mikil ',
+  codes:{0:'Heiðskírt',1:'Léttskýjað',2:'Hálfskýjað',3:'Alskýjað',45:'Þoka',48:'Frostþoka',51:'Lítils háttar súld',53:'Súld',55:'Mikil súld',56:'Frostúði',57:'Frostúði',61:'Lítils háttar rigning',63:'Rigning',65:'Mikil rigning',66:'Frostrigning',67:'Frostrigning',71:'Lítils háttar snjókoma',73:'Snjókoma',75:'Mikil snjókoma',77:'Kornsnjór',80:'Lítils háttar skúrir',81:'Skúrir',82:'Miklar skúrir',85:'Éljagangur',86:'Éljagangur',95:'Þrumuveður',96:'Þrumuveður með hagli',99:'Þrumuveður með hagli'},
+  locs:{spain:{btn:'Spánn',place:'Villamartín, Orihuela Costa · Spáni'},iceland:{btn:'Ísland',place:'221 Hafnarfjörður · Íslandi'}},
+  st:{LELC:['Flugvöllurinn í San Javier','20 km sunnar'],LEAL:['Flugvöllurinn í Alicante','50 km norðar']},
+  locGroup:'Veldu staðsetningu',langGroup:'Veldu tungumál',
+  fl:{title:'Flug til Spánar',units:['dagar','klst.','mín.','sek.'],before:'Brottför eftir',leg1:'Í loftinu til London · lending eftir',lay:'Bið á Gatwick · næsta flug eftir',leg2:'Í loftinu til Alicante · lending eftir',landed:'Velkominn til Spánar! Þú ert lentur',
+    note:'Sjálfstæð tenging á Gatwick (2 klst. 30 mín.): sæktu töskurnar og innritaðu þig aftur í U2 8111.',wx:'Veðrið 23. nóv.',dep:'Hafnarfjörður',arr:'Villamartín'}}
+};
+const KIND={0:'sun',1:'sun',2:'part',3:'cloud',45:'fog',48:'fog',51:'rain',53:'rain',55:'rain',56:'rain',57:'rain',61:'rain',63:'rain',65:'rain',66:'rain',67:'rain',71:'snow',73:'snow',75:'snow',77:'snow',80:'rain',81:'rain',82:'rain',85:'snow',86:'snow',95:'storm',96:'storm',99:'storm'};
+const INTENS={51:.3,53:.5,55:.7,56:.5,57:.7,61:.5,63:.8,65:1,66:.6,67:.9,71:.4,73:.7,75:1,77:.4,80:.5,81:.8,82:1,85:.6,86:.9,95:1,96:1,99:1};
+
+/* ---------- places ---------- */
+const LOCS={
+  spain:{title:'Calle Clavo',lat:37.9364,lon:-0.7485,tz:'Europe/Madrid',mlat:37.93,mlon:-0.70,arc:400,obs:{type:'metar',ids:['LELC','LEAL']}},
+  iceland:{title:'Hafravellir 11',lat:64.0432,lon:-21.9696,tz:'Atlantic/Reykjavik',mlat:64.06,mlon:-22.05,arc:170,obs:{type:'vedur',ids:['1473','31475','1']}}
+};
+const store=(k,v)=>{try{if(v!=null)localStorage.setItem(k,v);return localStorage.getItem(k)}catch(e){return null}};
+let locKey=LOCS[location.hash.slice(1)]?location.hash.slice(1):LOCS[store('loc')]?store('loc'):'spain';
+let lang=TXT[store('lang')]?store('lang'):((navigator.language||'').startsWith('is')?'is':'en');
+let loc=LOCS[locKey],gen=0;
+let F=null,M=null,O=null,errMsg=null,updated=null;
+const L=()=>TXT[lang];
+const dir=d=>L().dirs[Math.round(d/45)%8];
+const num=(x,dp)=>{const s=dp==null?String(x):(+x).toFixed(dp);return lang==='is'?s.replace('.',','):s};
+const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
+
+/* ---------- colour helpers ---------- */
+const hex=c=>[1,3,5].map(i=>parseInt(c.slice(i,i+2),16));
+const mix=(a,b,t)=>'#'+hex(a).map((v,i)=>Math.round(v+(hex(b)[i]-v)*t).toString(16).padStart(2,'0')).join('');
+
+/* ---------- icons (animated) ---------- */
+function icon(kind,day,size,anim){
+  const s=size||40,a=anim?' ic':'';
+  const sunG=`<g class="rays">${Array.from({length:8},(_,i)=>`<rect x="19" y="3" width="2" height="5" rx="1" fill="#ffd166" transform="rotate(${i*45} 20 20)"/>`).join('')}</g><circle cx="20" cy="20" r="7.5" fill="url(#gs${s})"/>`;
+  const moon=`<path d="M24 10a10 10 0 1 0 7 15 8 8 0 0 1-7-15z" fill="#e7ecff"/>`;
+  const body=day?sunG:moon;
+  const cl=(x,y,f,o)=>`<path d="M${x} ${y}h19a6.5 6.5 0 0 0 0-13 8.5 8.5 0 0 0-16-2 5.5 5.5 0 0 0-3 15z" fill="${f}" opacity="${o||1}"/>`;
+  const drops=(c,sn)=>[13,20,27].map((x,i)=>sn?`<circle class="dr" style="animation-delay:${i*.35}s" cx="${x}" cy="33" r="2" fill="#fff"/>`:`<path class="dr" style="animation-delay:${i*.3}s" d="M${x} 30l-1.5 5" stroke="#7dd3fc" stroke-width="2.4" stroke-linecap="round"/>`).join('');
+  let g;
+  if(kind==='sun')g=body;
+  else if(kind==='part')g=`<g transform="translate(-6 -6) scale(.9)">${body}</g><g class="bob">${cl(11,33,'#fff',.95)}</g>`;
+  else if(kind==='cloud')g=`<g class="bob">${cl(13,24,'#c7d2de',.8)}${cl(8,30,'#fff')}</g>`;
+  else if(kind==='fog')g=`${cl(9,22,'#e2e8f0')}<path d="M7 28h26M10 33h20M13 38h14" stroke="#e2e8f0" stroke-width="2.4" stroke-linecap="round" opacity=".85"/>`;
+  else if(kind==='rain')g=`<g class="bob">${cl(9,25,'#dbe4ee')}</g>${drops()}`;
+  else if(kind==='snow')g=`<g class="bob">${cl(9,25,'#eef3f8')}</g>${drops(0,1)}`;
+  else g=`<g class="bob">${cl(9,25,'#9aa8b8')}</g><path class="dr" d="M21 26l-4 7h5l-3 7" stroke="#ffd166" stroke-width="2.6" fill="none" stroke-linejoin="round"/>`;
+  return `<svg class="${a}" width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="gs${s}"><stop offset="0" stop-color="#fff3b0"/><stop offset="1" stop-color="#ffb703"/></radialGradient></defs>${g}</svg>`;
+}
+
+/* ---------- the scene ---------- */
+let PORT=false;
+let SC={kind:'part',phase:'day',sunF:.5,temp:15,code:2};
+function phaseNow(){
+  if(!F)return {phase:'day',sunF:.45};
+  const c=F.current,n=mins(c.time),sr=mins(F.daily.sunrise[0]),ss=mins(F.daily.sunset[0]);
+  const sunF=(n-sr)/(ss-sr);
+  let phase=n<sr-35||n>ss+35?'night':Math.abs(n-sr)<=35?'dawn':Math.abs(n-ss)<=35?'dusk':'day';
+  return {phase,sunF};
+}
+function scene(){
+  const {kind,phase,sunF,temp}=SC, ice=locKey==='iceland'; PORT=innerWidth/innerHeight<.9;
+  const dull=['cloud','fog','rain','snow','storm'].includes(kind), stormy=kind==='storm';
+  const nf=phase==='night'?.8:phase==='day'?0:.45;      // how dark the land gets
+  let sky;
+  if(phase==='night')sky=['#030817','#0b1a3a','#1c2f5c'];
+  else if(phase==='dawn')sky=['#23305e','#7d6aa8','#ffb08a'];
+  else if(phase==='dusk')sky=['#1d1b4b','#8f4f8f','#ff8e5e'];
+  else sky=ice?['#3d79c2','#7fb2e5','#d6e9f7']:['#1f7fe0','#5eb3f5','#bfe6ff'];
+  if(dull)sky=sky.map((c,i)=>mix(c,stormy?['#20262e','#3a434e','#59636e'][i]:['#5c6c7d','#8796a6','#b9c4cf'][i],phase==='night'?.35:.75));
+  const T=(c,k)=>mix(c,'#141d36',k??nf);
+  const g=[];
+  g.push(`<defs>
+   <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset=".55" stop-color="${sky[1]}"/><stop offset="1" stop-color="${sky[2]}"/></linearGradient>
+   <radialGradient id="glow"><stop offset="0" stop-color="#fff6c8" stop-opacity=".95"/><stop offset=".25" stop-color="#ffd166" stop-opacity=".55"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></radialGradient>
+   <radialGradient id="mglow"><stop offset="0" stop-color="#dfe7ff" stop-opacity=".6"/><stop offset="1" stop-color="#dfe7ff" stop-opacity="0"/></radialGradient>
+   <linearGradient id="seaG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${T(ice?'#3f7ea6':'#2aa3d6')}"/><stop offset="1" stop-color="${T(ice?'#173d5c':'#0b5c8f')}"/></linearGradient>
+   <linearGradient id="aur1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a78bfa" stop-opacity="0"/><stop offset=".45" stop-color="#5eead4" stop-opacity=".8"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/></linearGradient>
+   <linearGradient id="aur2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f472b6" stop-opacity="0"/><stop offset=".5" stop-color="#4ade80" stop-opacity=".7"/><stop offset="1" stop-color="#4ade80" stop-opacity="0"/></linearGradient>
+   <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter><filter id="soft"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs><rect width="1600" height="1000" fill="url(#sky)"/>`);
+  // aurora
+  if(ice&&phase==='night'&&!dull)g.push(`<g filter="url(#blur)"><path class="aur" d="M-100 330 C200 180 420 360 720 230 S1200 120 1700 260 L1700 420 C1200 300 900 420 700 380 S200 380 -100 470Z" fill="url(#aur1)"/><path class="aur" style="animation-delay:-4s;animation-duration:12s" d="M100 220 C380 120 640 260 900 150 S1350 90 1650 170 L1650 300 C1300 230 1000 320 800 290 S350 300 100 340Z" fill="url(#aur2)"/></g>`);
+  // sun / moon
+  if(phase!=='night'){
+    const f=Math.min(1.05,Math.max(-.05,sunF)), x=180+1240*f, y=640-loc.arc*Math.sin(Math.PI*Math.min(1,Math.max(0,f)))-20;
+    const op=dull?.35:1;
+    if(dull)g.push(`<circle cx="${x}" cy="${y}" r="260" fill="url(#glow)" opacity=".28"/>`);
+    else g.push(`<g opacity="${op}"><circle cx="${x}" cy="${y}" r="230" fill="url(#glow)"/><g class="spin">${Array.from({length:12},(_,i)=>`<rect x="${x-2}" y="${y-150}" width="4" height="60" rx="2" fill="#fff3c4" opacity=".35" transform="rotate(${i*30} ${x} ${y})"/>`).join('')}</g><circle cx="${x}" cy="${y}" r="58" fill="#fff7d6"/></g>`);
+    if(!dull)g.push(`<g>${Array.from({length:14},(_,i)=>`<rect class="glint" style="animation-delay:${(i%5)*.6}s" x="${x-60+((i*37)%120)}" y="${672+i*18}" width="${30+(i*13)%50}" height="3" rx="1.5" fill="#fff8d0" opacity=".5"/>`).join('')}</g>`);
+  }else{
+    g.push(`<mask id="mm"><rect width="1600" height="1000" fill="#fff"/><circle cx="1244" cy="176" r="40" fill="#000"/></mask><circle cx="1220" cy="190" r="140" fill="url(#mglow)" opacity="${dull?.25:1}"/><circle cx="1220" cy="190" r="44" fill="#eef2ff" mask="url(#mm)" opacity="${dull?.3:1}"/>`);
+  }
+  // clouds
+  const cloud=(y,s,o,dur,delay,col)=>`<g class="cloud" style="animation-duration:${dur}s;animation-delay:${delay}s"><g transform="translate(0 ${y}) scale(${s})" opacity="${o}" fill="${col}"><ellipse cx="0" cy="0" rx="120" ry="42"/><ellipse cx="-60" cy="-20" rx="70" ry="50"/><ellipse cx="45" cy="-42" rx="85" ry="62"/><ellipse cx="110" cy="-8" rx="60" ry="38"/></g></g>`;
+  const cc=phase==='night'?mix('#ffffff','#1c2a4a',.75):phase==='day'?(dull?'#e6ebf0':'#ffffff'):'#ffd9c7';
+  let cl=[];
+  if(kind==='part')cl=[[200,1,.9,90,-20],[120,.7,.75,120,-70],[330,.8,.8,105,-45]];
+  else if(kind==='sun')cl=[[160,.6,.6,140,-30]];
+  else if(dull)cl=[[120,1.4,.95,80,-10],[220,1.2,.9,95,-50],[90,1.1,.85,110,-80],[300,1.5,.9,70,-30],[180,1,.85,100,-65]];
+  if(dull)g.push(`<rect width="1600" height="420" fill="${mix(cc,sky[0],.3)}" opacity=".55" filter="url(#blur)"/>`);
+  g.push(cl.map(([y,s,o,d,dl])=>cloud(y,s,o,d,dl,cc)).join(''));
+  if(ice)g.push(iceland(T,phase,temp,nf));else g.push(spain(T,phase,nf));
+  if(kind==='fog')g.push(`<g filter="url(#blur)" opacity=".75"><rect class="cloud" style="animation-duration:60s" x="-400" y="560" width="1400" height="140" rx="70" fill="#e5e9ee"/><rect class="cloud" style="animation-duration:80s;animation-delay:-40s" x="-400" y="680" width="1600" height="160" rx="80" fill="#eef1f4"/></g>`);
+  $('scene').innerHTML=g.join('');
+}
+function sea(T,y){
+  return `<rect y="${y}" width="1600" height="${1000-y}" fill="url(#seaG)"/>
+  ${[0,1,2].map(i=>`<path class="wave" style="animation-duration:${6+i*2}s" d="M0 ${y+30+i*55} ${'q30 -7 60 0 t60 0 '.repeat(16)}" stroke="#fff" stroke-opacity="${.18-i*.04}" stroke-width="2.5" fill="none"/>`).join('')}`;
+}
+function spain(T,phase,nf){
+  const lit=phase!=='day';
+  const houses=[[90,700,120,90],[220,690,110,100],[330,710,130,80],[470,700,100,92],[565,715,120,76]].map(([x,y,w,h],i)=>
+    `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${T(['#fbf7ef','#f6eadb','#ffffff','#f3e3cf','#fbf3e6'][i])}"/><path d="M${x-8} ${y} L${x+w/2} ${y-34} L${x+w+8} ${y}Z" fill="${T(['#c8553d','#d96c3c','#b94a34','#cf6a43','#c25b3a'][i])}"/>
+     <rect x="${x+w*.2}" y="${y+h*.3}" width="${w*.18}" height="${h*.28}" rx="3" fill="${lit?'#ffd27a':T('#2c6a8f',.2)}"/><rect x="${x+w*.62}" y="${y+h*.3}" width="${w*.18}" height="${h*.28}" rx="3" fill="${lit?'#ffcf6e':T('#2c6a8f',.2)}"/>`).join('');
+  const palm=(x,y,s,d)=>`<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0 C10 -90 -6 -190 20 -300" stroke="${T('#7a5636')}" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <g class="sway" style="animation-delay:${d}s">${[[-150,-260],[-120,-330],[-30,-360],[70,-350],[160,-300],[150,-240],[-90,-220]].map(([a,b])=>`<path d="M20 -300 Q${(20+a)/2} ${-340+(b+300)*.2} ${a} ${b} Q${(20+a)/2+10} ${-310+(b+300)*.3} 20 -300Z" fill="${T('#2f7d4a')}"/>`).join('')}<circle cx="20" cy="-298" r="12" fill="${T('#5b3b22')}"/></g></g>`;
+  return `<path d="M0 640 C220 580 420 600 640 585 S1100 560 1300 600 S1520 615 1600 600 L1600 650 L0 650Z" fill="${T('#c79c7c')}" opacity=".9"/>
+  <path d="M520 640 C640 620 860 618 1020 632 L1040 650 L500 650Z" fill="${T('#f4a3bd',nf*.8)}"/>
+  ${sea(T,648)}
+  <g ${PORT?'transform="translate(530 330) scale(.56)"':''}><path d="M0 760 C150 690 380 680 640 735 L660 1000 L0 1000Z" fill="${T('#e9cf9f')}"/>${houses}</g>
+  <path d="M0 860 C300 820 700 840 1000 880 S1450 900 1600 870 L1600 1000 L0 1000Z" fill="${T('#f2dcb0')}"/>
+  ${PORT?palm(960,990,.85,0)+palm(1050,1010,.6,-2):palm(1180,960,1,0)+palm(1360,990,1.18,-1.5)+palm(1040,975,.8,-3)}`;
+}
+function iceland(T,phase,temp,nf){
+  const lit=phase!=='day', snowy=temp<=1;
+  const cols=['#c8423b','#f2c14e','#3c6e9f','#f4f1ea','#2f8f6b','#d9663c','#8fb8d8'];
+  const houses=cols.map((c,i)=>{const x=40+i*95,w=82,h=70+((i*23)%30),y=820-h;
+    return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${T(c)}"/><path d="M${x-6} ${y} L${x+w/2} ${y-38} L${x+w+6} ${y}Z" fill="${snowy?T('#f4f7fb',nf*.7):T('#2b3138')}"/>
+    <rect x="${x+14}" y="${y+18}" width="16" height="20" rx="2" fill="${lit?'#ffd27a':T('#20384f',.2)}"/><rect x="${x+w-30}" y="${y+18}" width="16" height="20" rx="2" fill="${lit?'#ffcf6e':T('#20384f',.2)}"/>`}).join('');
+  const lh=PORT?975:1330;
+  return `<path d="M-20 650 L60 560 C150 520 420 515 560 530 L650 560 L740 650Z" fill="${T('#6d7c8b')}"/>
+  <path d="M60 560 C150 520 420 515 560 530 L600 545 C450 540 300 548 170 560 L110 585Z" fill="${T('#f4f7fb',nf*.7)}" opacity=".95"/>
+  <path d="M700 650 L980 470 L1260 650Z" fill="${T('#5b6977')}"/>
+  <path d="M930 502 L980 470 L1030 502 L1005 512 L980 500 L955 515Z" fill="${T('#f4f7fb',nf*.7)}"/>
+  <path d="M1180 650 L1400 560 L1620 650Z" fill="${T('#7a8896')}"/>
+  ${sea(T,648)}
+  <g ${PORT?'transform="translate(560 430) scale(.45)"':''}><path d="M0 860 C200 800 600 800 860 840 L860 1000 L0 1000Z" fill="${snowy?T('#e9eef4',nf*.7):T('#3c4a3c')}"/>${houses}</g>
+  <path d="M0 900 C400 860 900 880 1600 860 L1600 1000 L0 1000Z" fill="${snowy?T('#f4f7fb',nf*.7):T('#2c3530')}"/>
+  <g><rect x="${lh-22}" y="730" width="44" height="150" fill="${T('#f4f1ea')}"/><rect x="${lh-22}" y="760" width="44" height="22" fill="${T('#d9663c')}"/><rect x="${lh-22}" y="815" width="44" height="22" fill="${T('#d9663c')}"/>
+   <rect x="${lh-16}" y="706" width="32" height="26" fill="${lit?'#ffe08a':T('#cfd8e0')}"/><path d="M${lh-24} 706 L${lh} 684 L${lh+24} 706Z" fill="${T('#d9663c')}"/>
+   ${lit?`<path class="beam" d="M${lh} 719 L${lh-420} 660 L${lh-420} 780Z" fill="#fff4c2"/><path class="beam" style="animation-delay:-2s" d="M${lh} 719 L${lh+300} 670 L${lh+300} 770Z" fill="#fff4c2"/>`:''}</g>
+  <path d="M${lh-130} 880 C${lh-70} 860 ${lh+70} 860 ${lh+150} 880 L${lh+150} 1000 L${lh-130} 1000Z" fill="${T('#2c3530')}"/>`;
+}
+
+/* ---------- particles: rain, snow, stars, lightning ---------- */
+const cv=$('fx'),ctx=cv.getContext&&cv.getContext('2d');
+let parts=[],fxMode='none',raf=0,W=0,H=0;
+function sizeCanvas(){if(!ctx)return;const d=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+function setFx(){
+  if(!ctx)return;
+  const {kind,phase,code}=SC, k=INTENS[code]||.5, area=W*H/1e6;
+  fxMode=kind==='rain'||kind==='storm'?'rain':kind==='snow'?'snow':phase==='night'&&kind!=='cloud'&&kind!=='fog'?'stars':'none';
+  const n=fxMode==='rain'?r(380*k*area+40):fxMode==='snow'?r(260*k*area+30):fxMode==='stars'?r(260*area+40):0;
+  parts=Array.from({length:n},()=>({x:Math.random()*W,y:Math.random()*H*(fxMode==='stars'?.55:1),v:fxMode==='rain'?11+Math.random()*9:.6+Math.random()*1.4,l:10+Math.random()*16,s:Math.random()*2+.6,p:Math.random()*6.28}));
+  cancelAnimationFrame(raf);
+  if(reduce){draw(0);return}
+  const loop=t=>{draw(t);raf=requestAnimationFrame(loop)};raf=requestAnimationFrame(loop);
+}
+function draw(t){
+  ctx.clearRect(0,0,W,H);
+  if(fxMode==='rain'){ctx.strokeStyle='rgba(210,230,255,.55)';ctx.lineWidth=1.3;ctx.beginPath();
+    for(const p of parts){ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-p.l*.25,p.y+p.l);p.y+=p.v;p.x-=p.v*.25;if(p.y>H){p.y=-20;p.x=Math.random()*W*1.2}}ctx.stroke();
+    if(SC.kind==='storm'&&!reduce&&Math.random()<.003){const f=$('flash');f.style.transition='none';f.style.opacity=.55;requestAnimationFrame(()=>{f.style.transition='opacity .6s';f.style.opacity=0})}}
+  else if(fxMode==='snow'){ctx.fillStyle='rgba(255,255,255,.9)';
+    for(const p of parts){ctx.beginPath();ctx.arc(p.x,p.y,p.s+.6,0,6.28);ctx.fill();p.y+=p.v;p.x+=Math.sin(t/1000+p.p)*.5;if(p.y>H){p.y=-6;p.x=Math.random()*W}}}
+  else if(fxMode==='stars'){for(const p of parts){const a=.35+.55*Math.abs(Math.sin(t/1400+p.p));ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.fillRect(p.x,p.y,p.s*.8,p.s*.8)}}
+}
+addEventListener('resize',()=>{const p=innerWidth/innerHeight<.9;sizeCanvas();if(p!==PORT)scene();setFx()});
+
+/* ---------- rendering ---------- */
+function renderStatic(){
+  const T=L();
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(e=>e.textContent=T[e.dataset.t]);
+  document.querySelectorAll('[data-loc]').forEach(b=>{b.textContent=T.locs[b.dataset.loc].btn;b.setAttribute('aria-pressed',b.dataset.loc===locKey)});
+  document.querySelectorAll('[data-lang]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.lang===lang));
+  $('locSeg').setAttribute('aria-label',T.locGroup);$('langSeg').setAttribute('aria-label',T.langGroup);
+  $('place').textContent=T.locs[locKey].place;
+  document.title=(lang==='is'?'Veðrið · ':'Weather · ')+loc.title;
+}
+function tile(label,ic,v,s,extra,wide){return `<div class="glass tile${wide===true?' wide':wide?' '+wide:''}"><div class="lbl">${ic}${label}</div>${v}${extra||''}<div class="s">${s}</div></div>`}
+const I={
+  wind:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8h11a3 3 0 1 0-3-3M3 16h15a3 3 0 1 1-3 3M3 12h7"/></svg>',
+  drop:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/></svg>',
+  therm:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 14V5a2 2 0 0 0-4 0v9a4 4 0 1 0 4 0z"/></svg>',
+  sun:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></svg>',
+  gauge:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 18a8 8 0 1 1 16 0"/><path d="M12 18l4-6"/></svg>',
+  wave:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12c3-3 5-3 8 0s5 3 8 0 3-2 4-1M2 18c3-3 5-3 8 0s5 3 8 0 3-2 4-1"/></svg>',
+  umb:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 0 1 18 0zM12 12v7a2 2 0 0 0 4 0"/></svg>'
+};
+function renderForecast(){
+  const T=L();
+  $('err').style.display=errMsg?'block':'none';
+  if(errMsg)$('err').textContent=T.err(errMsg);
+  if(!F){
+    $('title').textContent=errMsg?T.unavail:T.loading;
+    $('temp').innerHTML=errMsg?'':'<span class="skel"></span>';
+    $('cond').innerHTML=$('hl').innerHTML='&nbsp;';
+    for(const id of ['hours','spark','tiles','days'])$(id).innerHTML='';
+    $('upd').textContent='';
+    SC={...SC,kind:errMsg?'cloud':'part',...phaseNow()};scene();setFx();return;
+  }
+  const c=F.current,dl=F.daily,h=F.hourly,kind=KIND[c.weather_code]||'cloud';
+  SC={kind,code:c.weather_code,temp:c.temperature_2m,...phaseNow()};
+  scene();setFx();
+  $('title').textContent=loc.title;
+  $('temp').innerHTML=`${r(c.temperature_2m)}<sup>°</sup>`;
+  $('cond').innerHTML=`${icon(kind,!!c.is_day,40,1)}<span>${T.codes[c.weather_code]||'—'}</span>`;
+  $('hl').textContent=T.hl(r(dl.temperature_2m_min[0]),r(dl.temperature_2m_max[0]));
+  // hourly strip
+  const now=c.time.slice(0,13),start=Math.max(0,h.time.findIndex(t=>t.slice(0,13)===now));
+  const idx=Array.from({length:25},(_,i)=>start+i).filter(i=>i<h.time.length);
+  $('hours').innerHTML=idx.map((i,k)=>`<div class="hr${k===0?' now':''}"><div class="h">${k===0?T.now:hm(h.time[i])}</div>${icon(KIND[h.weather_code[i]]||'cloud',h.is_day[i],34)}<div class="tt">${r(h.temperature_2m[i])}°</div><div class="p">${(h.precipitation_probability[i]??0)>=20?h.precipitation_probability[i]+'%':''}</div></div>`).join('');
+  drawSpark(idx.map(i=>h.temperature_2m[i]));
+  // tiles
+  const wdir=c.wind_direction_10m, card=T.card;
+  const compass=`<div class="compass"><svg width="74" height="74" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="1.5"/>
+    ${Array.from({length:36},(_,i)=>`<line x1="40" y1="${i%9?9:6}" x2="40" y2="11" stroke="rgba(255,255,255,${i%9?.3:.7})" stroke-width="1.2" transform="rotate(${i*10} 40 40)"/>`).join('')}
+    ${card.map((l,i)=>`<text x="${40+24*Math.sin(i*Math.PI/2)}" y="${44-24*Math.cos(i*Math.PI/2)}" text-anchor="middle" font-size="10" fill="rgba(255,255,255,.8)">${l}</text>`).join('')}
+    <g transform="rotate(${wdir+180} 40 40)" style="transition:transform 1s"><path d="M40 12 L46 30 L40 26 L34 30Z" fill="#fff"/><line x1="40" y1="26" x2="40" y2="62" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></g></svg>
+    <div><div class="v">${r(c.wind_speed_10m)}<small>m/s</small></div><div style="font-size:15px">${dir(wdir)}</div></div></div>`;
+  const sr=mins(dl.sunrise[0]),ss=mins(dl.sunset[0]),nowM=mins(c.time),dayLen=ss-sr,f=Math.min(1,Math.max(0,(nowM-sr)/dayLen));
+  const ax=20+260*f,ay=78-58*Math.sin(Math.PI*f);
+  const arc=`<svg viewBox="0 0 300 92" style="width:100%;height:auto;margin:-4px 0 0" aria-hidden="true"><path d="M20 78 A130 58 0 0 1 280 78" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2" stroke-dasharray="4 5"/>
+    <path d="M20 78 A130 58 0 0 1 ${ax} ${ay}" fill="none" stroke="#ffd166" stroke-width="3" stroke-linecap="round" opacity="${f>0?1:0}"/><line x1="8" y1="78" x2="292" y2="78" stroke="rgba(255,255,255,.3)"/>
+    <circle cx="${ax}" cy="${ay}" r="9" fill="#ffd166" opacity="${f>0&&f<1?1:.4}"/><circle cx="${ax}" cy="${ay}" r="16" fill="#ffd166" opacity="${f>0&&f<1?.25:0}"/></svg>`;
+  const uv=dl.uv_index_max[0]??0, sum=dl.precipitation_sum[0]??0;
+  const t=[
+    tile(T.wind,I.wind,compass,T.gustS(r(c.wind_gusts_10m))),
+    tile(T.feels,I.therm,`<div class="v">${r(c.apparent_temperature)}°</div>`,T.feelsS(c.apparent_temperature,c.temperature_2m)),
+    tile(T.sun,I.sun,`<div style="display:flex;justify-content:space-between;font-size:15px"><span>↑ ${hm(dl.sunrise[0])}</span><span>↓ ${hm(dl.sunset[0])}</span></div>`,T.daylight(Math.floor(dayLen/60),dayLen%60),arc,true),
+    tile(T.hum,I.drop,`<div class="v">${c.relative_humidity_2m}<small>%</small></div>`,c.dew_point_2m!=null?T.dew(num(r(c.dew_point_2m))):''),
+    tile(T.uv,I.sun,`<div class="v">${num(Math.round(uv*10)/10)}</div>`,T.uvS(uv),`<div class="uvbar"><i style="left:${Math.min(100,uv/11*100)}%"></i></div>`),
+    tile(T.pres,I.gauge,`<div class="v">${r(c.pressure_msl)}<small>hPa</small></div>`,T.presS(c.pressure_msl)),
+    tile(T.rainToday,I.umb,`<div class="v">${num(Math.round(sum*10)/10)}<small>mm</small></div>`,T.rainS(dl.precipitation_probability_max[0]??0))
+  ];
+  if(M&&M.sea_surface_temperature!=null)t.push(tile(T.sea,I.wave,`<div class="v">${r(M.sea_surface_temperature)}°</div>`,M.wave_height!=null?T.seaS(num(M.wave_height)):'','','seat'));
+  $('tiles').innerHTML=t.join('');
+  // 7 days
+  const lo=Math.min(...dl.temperature_2m_min),hi=Math.max(...dl.temperature_2m_max);
+  $('days').innerHTML=dl.time.map((d,i)=>{
+    const dt=new Date(d+'T12:00'),wd=cap(dt.toLocaleDateString(T.locale,{weekday:'long'}));
+    const a=(dl.temperature_2m_min[i]-lo)/(hi-lo||1)*100,b=(dl.temperature_2m_max[i]-lo)/(hi-lo||1)*100,p=dl.precipitation_probability_max[i]??0;
+    return `<li><div class="dn">${i===0?T.today:i===1?T.tomorrow:wd}<small>${p>=20?p+'%':''}</small></div>
+    <div title="${T.codes[dl.weather_code[i]]||''}">${icon(KIND[dl.weather_code[i]]||'cloud',1,32)}</div>
+    <div class="lo">${r(dl.temperature_2m_min[i])}°</div><div class="rng"><i style="left:${a}%;width:${Math.max(5,b-a)}%"></i></div>
+    <div class="hi">${r(dl.temperature_2m_max[i])}°</div></li>`;
+  }).join('');
+  $('upd').textContent=updated?T.upd(updated.toLocaleTimeString(T.locale,{hour:'2-digit',minute:'2-digit',hourCycle:'h23'})):'';
+}
+function drawSpark(t){
+  const s=$('spark'),w=s.clientWidth||600,hgt=46;
+  if(!t.length){s.innerHTML='';return}
+  const mn=Math.min(...t),mx=Math.max(...t),X=i=>4+(w-8)*i/(t.length-1),Y=v=>hgt-6-(hgt-14)*((v-mn)/((mx-mn)||1));
+  const p=t.map((v,i)=>`${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+  s.setAttribute('viewBox',`0 0 ${w} ${hgt}`);
+  s.innerHTML=`<defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd166" stop-opacity=".45"/><stop offset="1" stop-color="#ffd166" stop-opacity="0"/></linearGradient></defs><polygon points="4,${hgt} ${p} ${w-4},${hgt}" fill="url(#sg)"/><polyline points="${p}" fill="none" stroke="#ffd166" stroke-width="2" stroke-linejoin="round"/>`;
+}
+const sro=new ResizeObserver(()=>{if(F)drawSpark(lastSpark())});sro.observe($('spark'));
+function lastSpark(){const h=F.hourly,now=F.current.time.slice(0,13),st=Math.max(0,h.time.findIndex(t=>t.slice(0,13)===now));return h.temperature_2m.slice(st,st+25)}
+
+/* ---------- flight countdown ---------- */
+const FLIGHT=[ // times in UTC (Iceland = UTC, London = UTC in Nov, Alicante = UTC+1)
+  {no:'U2 8844',from:'KEF',to:'LGW',dep:Date.UTC(2026,10,23,11,55),arr:Date.UTC(2026,10,23,15,10),dl:'11:55',al:'15:10'},
+  {no:'U2 8111',from:'LGW',to:'ALC',dep:Date.UTC(2026,10,23,17,40),arr:Date.UTC(2026,10,23,20,10),dl:'17:40',al:'21:10'}];
+const FDAY='2026-11-23';
+let FW={};
+async function loadTripWx(){
+  for(const k of ['iceland','spain']){
+    const l=LOCS[k];
+    try{const j=await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${l.lat}&longitude=${l.lon}&timezone=${encodeURIComponent(l.tz)}&daily=weather_code,temperature_2m_max,temperature_2m_min&start_date=${FDAY}&end_date=${FDAY}`)).json();
+      if(j.daily)FW[k]={c:j.daily.weather_code[0],hi:j.daily.temperature_2m_max[0],lo:j.daily.temperature_2m_min[0]}}catch(e){}
+  }
+  renderFlight(true);
+}
+let fBuilt='';
+function renderFlight(force){
+  const T=L().fl,now=Date.now(),a=FLIGHT[0],b=FLIGHT[1],el=$('flight');
+  if(now>b.arr+24*36e5){el.hidden=true;return}
+  el.hidden=false;
+  let state,target;
+  if(now<a.dep){state='before';target=a.dep}else if(now<a.arr){state='leg1';target=a.arr}else if(now<b.dep){state='lay';target=b.dep}else if(now<b.arr){state='leg2';target=b.arr}else{state='landed';target=null}
+  const left=Math.max(0,(target||now)-now),u=[Math.floor(left/864e5),Math.floor(left/36e5)%24,Math.floor(left/6e4)%60,Math.floor(left/1e3)%60];
+  const tot=b.arr-a.dep,P=t=>((t-a.dep)/tot*100).toFixed(2),prog=Math.min(100,Math.max(0,(now-a.dep)/tot*100));
+  const key=lang+state+JSON.stringify(FW);
+  if(force||key!==fBuilt){
+    fBuilt=key;
+    const wx=k=>FW[k]?`<div>${icon(KIND[FW[k].c]||'cloud',1,30)}<span>${k==='iceland'?T.dep:T.arr}<small>${r(FW[k].lo)}° / ${r(FW[k].hi)}° · ${L().codes[FW[k].c]||''}</small></span></div>`:'';
+    el.innerHTML=`<div><h2 class="lbl"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>${T.title}</h2>
+      <p class="fstate" id="fstate"></p>${state==='landed'?'':`<div class="cd" id="cd">${T.units.map(x=>`<div><b>0</b><span>${x}</span></div>`).join('')}</div>`}</div>
+      <div><div class="route"><div class="ln" style="left:0;width:${P(a.arr)}%"></div><div class="ln lay" style="left:${P(a.arr)}%;width:${P(b.dep)-P(a.arr)}%"></div><div class="ln" style="left:${P(b.dep)}%;width:${100-P(b.dep)}%"></div>
+        <div class="done" id="fdone"></div>
+        ${[[0,'KEF'],[P(a.arr),'LGW'],[100,'ALC']].map(([p,c])=>`<div class="stop" style="left:${p}%"></div><div class="code" style="left:${p}%">${c}</div>`).join('')}
+        <svg class="plane" id="fplane" width="30" height="30" viewBox="0 0 24 24" fill="#ffd166" aria-hidden="true"><path transform="rotate(90 12 12)" d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg></div>
+      <div class="legs">${FLIGHT.map(f=>`<div><b>${f.from} → ${f.to}</b> · ${f.no}<small>${new Date(f.dep).toLocaleDateString(L().locale,{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'})} · ${f.dl} – ${f.al}</small></div>`).join('')}</div>
+      ${FW.iceland||FW.spain?`<div class="lbl" style="margin:12px 0 0">${T.wx}</div><div class="fwx">${wx('iceland')}${wx('spain')}</div>`:''}
+      ${state==='before'||state==='leg1'||state==='lay'?`<div class="fnote">${T.note}</div>`:''}</div>`;
+  }
+  $('fstate').textContent=T[state];
+  const cd=$('cd');if(cd)[...cd.querySelectorAll('b')].forEach((x,i)=>x.textContent=i?String(u[i]).padStart(2,'0'):u[i]);
+  $('fdone').style.width=prog+'%';$('fplane').style.left=prog+'%';
+}
+setInterval(()=>renderFlight(),1000);
+
+const mini=v=>`<div class="mini">${v.map(([a,b])=>`<div><b>${esc(a)}</b><span>${b}</span></div>`).join('')}</div>`;
+function renderObs(){
+  const T=L();
+  if(!O){$('obsSub').textContent=T.nearest;$('obsBody').innerHTML=`<p class="note">${T.obsLoading}</p>`;return}
+  if(O.error){$('obsSub').textContent=T.nearest;$('obsBody').innerHTML=`<p class="note">${esc(T.obsErr(O.error==='none'?T.noRecent:O.error))}</p>`;return}
+  const m=Math.max(0,Math.round((Date.now()-O.time)/60000));
+  const when=T.ago(O.time.toLocaleTimeString(T.locale,{hour:'2-digit',minute:'2-digit',hourCycle:'h23',timeZone:loc.tz}),m);
+  const diff=F?T.diff(num(F.current.temperature_2m,1)):'';
+  const v=[];
+  if(O.type==='metar'){
+    const o=O.m,st=T.st[O.id];
+    v.push([cap(o.wx?(o.wxInt?T[o.wxInt]:'')+T.wx[o.wx]:(o.cl?T.skyM[o.cl]:o.clear?T.skyM.CLR:'—')),T.sky]);
+    if(o.ws!=null)v.push([o.ws<0.5?T.calm:`${r(o.ws)} m/s${o.dir!=null?' '+dir(o.dir):''}`,T.wind]);
+    if(o.gust)v.push([`${r(o.gust)} m/s`,T.gusts]);
+    if(o.rh!=null)v.push([`${o.rh}%`,T.hum]);
+    if(o.q)v.push([`${o.q} hPa`,T.pres]);
+    $('obsSub').textContent=T.metarSub(st[0],st[1],when);
+    $('obsBody').innerHTML=`<div class="row"><div class="t">${o.t}°</div>${mini(v)}</div><div class="diff">${esc(diff)}</div>
+      <details><summary>${T.raw}</summary><code>${esc(o.raw)}</code></details>`;
+  }else{
+    const s=O.s;
+    if(s.F!=null)v.push([s.F==='0'?T.calm:`${num(s.F)} m/s${s.D!=null?' '+dir(s.D):''}`,T.wind]);
+    if(s.FG!=null)v.push([`${num(s.FG)} m/s`,T.gusts]);
+    if(s.RH!=null)v.push([`${s.RH}%`,T.hum]);
+    if(s.P!=null)v.push([`${s.P} hPa`,T.pres]);
+    if(s.R!=null)v.push([`${num(s.R)} mm`,T.rain1h]);
+    $('obsSub').textContent=T.vedurSub(s.name,when);
+    $('obsBody').innerHTML=`<div class="row"><div class="t">${num(s.T,1)}°</div>${mini(v)}</div><div class="diff">${esc(diff)}${T.vedurNote}</div>`;
+  }
+}
+const renderAll=()=>{renderStatic();renderForecast();renderObs();renderFlight(true)};
+
+/* ---------- fetching ---------- */
+function parseMetar(m){
+  const o={raw:m};
+  for(const t of m.split(/\s+/)){
+    let x;
+    if(x=t.match(/^(\d\d)(\d\d)(\d\d)Z$/)){const n=new Date();o.time=new Date(Date.UTC(n.getUTCFullYear(),n.getUTCMonth(),+x[1],+x[2],+x[3]));if(o.time-n>864e5)o.time.setUTCMonth(o.time.getUTCMonth()-1)}
+    else if(x=t.match(/^(\d{3}|VRB)(\d{2,3})(?:G(\d{2,3}))?(KT|MPS)$/)){const f=x[4]==='KT'?0.5144:1;o.dir=x[1]==='VRB'?null:+x[1];o.ws=+x[2]*f;if(x[3])o.gust=+x[3]*f}
+    else if(x=t.match(/^(M?\d{2})\/(M?\d{2})?$/)){const v=y=>+y.replace('M','-');o.t=v(x[1]);if(x[2])o.td=v(x[2])}
+    else if(x=t.match(/^Q(\d{4})$/))o.q=+x[1];
+    else if(x=t.match(/^A(\d{4})$/))o.q=Math.round(+x[1]/100*33.8639);
+    else if(['CAVOK','NSC','SKC','CLR','NCD'].includes(t))o.clear=true;
+    else if(x=t.match(/^(FEW|SCT|BKN|OVC)\d{3}/)){const k={FEW:1,SCT:2,BKN:3,OVC:4};if(!o.cl||k[x[1]]>k[o.cl])o.cl=x[1]}
+    else if(x=t.match(/^([-+]?)(SH|TS)?(RA|DZ|SN|GR|FG|BR|HZ|DU|SA)$/)){o.wx=x[2]==='SH'&&x[3]==='RA'?'SHRA':x[2]==='TS'?(x[3]==='RA'?'TSRA':'TS'):x[3];o.wxInt=x[1]==='-'?'light':x[1]==='+'?'heavy':''}
+    else if(t==='TS')o.wx='TS';
+  }
+  if(o.t!=null&&o.td!=null){const g=v=>Math.exp(17.625*v/(243.04+v));o.rh=Math.round(100*g(o.td)/g(o.t))}
+  return o;
+}
+async function getMetar(ids){
+  const res=await fetch('https://metar.vatsim.net/'+ids.join(','));
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const lines=(await res.text()).trim().split('\n');
+  for(const id of ids){const l=lines.find(x=>x.startsWith(id+' '));if(l){const m=parseMetar(l);if(m.t!=null&&m.time&&Date.now()-m.time<3*36e5)return {type:'metar',id,m,time:m.time}}}
+  return {error:'none'};
+}
+async function getVedur(ids){
+  const res=await fetch('https://xmlweather.vedur.is/?op_w=xml&type=obs&lang=en&view=xml&params=T;F;FG;D;RH;P;R&ids='+ids.join(';'));
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  const x=new DOMParser().parseFromString(await res.text(),'text/xml');
+  const all=[...x.querySelectorAll('station')].map(n=>{const g=k=>{const v=n.querySelector(k)?.textContent.trim();return v?v:null};
+    return {id:n.getAttribute('id'),name:g('name'),time:g('time'),T:g('T'),F:g('F'),FG:g('FG'),D:g('D'),RH:g('RH'),P:g('P'),R:g('R')}});
+  const s=ids.map(id=>all.find(a=>a.id===id)).find(a=>a&&a.T!=null&&a.time);
+  if(!s)return {error:'none'};
+  const DEG={N:0,NNE:22.5,NE:45,ENE:67.5,E:90,ESE:112.5,SE:135,SSE:157.5,S:180,SSW:202.5,SW:225,WSW:247.5,W:270,WNW:292.5,NW:315,NNW:337.5};
+  s.D=s.D in DEG?DEG[s.D]:null;
+  s.P=s.P||all.find(a=>a.P)?.P||null;
+  s.RH=s.RH||all.find(a=>a.RH)?.RH||null;
+  return {type:'vedur',s,time:new Date(s.time.replace(' ','T')+'Z')};
+}
+async function load(){
+  const my=gen;
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&timezone=${encodeURIComponent(loc.tz)}&wind_speed_unit=ms&forecast_days=7`+
+    `&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,weather_code,is_day,wind_speed_10m,wind_direction_10m,wind_gusts_10m,pressure_msl,precipitation`+
+    `&hourly=temperature_2m,weather_code,precipitation_probability,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum,sunrise,sunset,uv_index_max`;
+  const fc=(async()=>{const res=await fetch(u);if(!res.ok)throw new Error('HTTP '+res.status);return res.json()})();
+  const mar=fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.mlat}&longitude=${loc.mlon}&timezone=${encodeURIComponent(loc.tz)}&current=sea_surface_temperature,wave_height`).then(x=>x.json()).then(j=>j.current||null).catch(()=>null);
+  const ob=(loc.obs.type==='vedur'?getVedur(loc.obs.ids):getMetar(loc.obs.ids)).catch(e=>({error:e.message||String(e)}));
+  try{const d=await fc;if(my!==gen)return;F=d;errMsg=null;updated=new Date()}
+  catch(e){if(my!==gen)return;if(!F)errMsg=e.message||String(e)}
+  const [m,o]=await Promise.all([mar,ob]);
+  if(my!==gen)return;
+  M=m;O=o;renderForecast();renderObs();
+}
+function setLoc(k){
+  locKey=k;loc=LOCS[k];gen++;F=M=O=null;errMsg=null;updated=null;
+  store('loc',k);
+  if(location.hash.slice(1)!==k)history.replaceState(null,'','#'+k);
+  renderAll();
+}
+document.querySelectorAll('[data-loc]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.loc!==locKey){setLoc(b.dataset.loc);load()}}));
+document.querySelectorAll('[data-lang]').forEach(b=>b.addEventListener('click',()=>{lang=b.dataset.lang;store('lang',lang);renderStatic();if(F)renderForecast();renderObs();renderFlight(true)}));
+addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(LOCS[h]&&h!==locKey){setLoc(h);load()}});
+$('refresh').addEventListener('click',load);
+sizeCanvas();
+setLoc(locKey);
+load();
+setInterval(load,15*60*1000);
+loadTripWx();setInterval(loadTripWx,60*60*1000);
+setInterval(renderObs,60*1000);
+}
+</script>
+</body>
+</html>
