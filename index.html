@@ -27,18 +27,24 @@
     p { margin: 8px 0 28px; color: var(--muted); }
     .apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .app {
-      display: grid; place-items: center; min-height: 150px; padding: 18px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+      min-height: 170px; padding: 18px;
       border: 1px solid var(--edge); border-radius: 22px; background: var(--tile);
       color: var(--ink); text-align: center; text-decoration: none; font-size: 18px; font-weight: 600;
       box-shadow: 0 8px 24px #17203312;
     }
+    .icon {
+      display: grid; place-items: center; width: 88px; height: 88px; border-radius: 22px;
+      border: 1px solid #ffffff40; box-shadow: 0 8px 18px #0003, inset 0 1px 0 #ffffff50;
+    }
+    .icon svg { width: 62px; height: 62px; }
     .app:hover { border-color: #1c2a5c; transform: translateY(-2px); }
     .app:focus-visible { outline: 3px solid #1c2a5c; outline-offset: 3px; }
     .message { grid-column: 1 / -1; color: var(--muted); }
     @media (min-width: 700px) {
       main { padding-top: 56px; }
       .apps { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
-      .app { min-height: 190px; font-size: 20px; }
+      .app { min-height: 210px; font-size: 20px; }
     }
     @media (prefers-reduced-motion: reduce) { .app { transition: none; } }
   </style>
@@ -49,13 +55,31 @@
     <h1>My Apps</h1>
     <p>Your apps, ready to open.</p>
     <nav class="apps" id="apps" aria-label="Apps">
-      <a class="app" href="me/my-weather.html">My weather</a>
       <span class="message">Loading apps…</span>
     </nav>
   </main>
+  <script src="app-icons.js"></script>
+  <script>
+    function appTile(fileName, href) {
+      const key = fileName.replace(/\.html$/i, '');
+      const art = window.APP_ICONS(key);
+      const link = document.createElement('a');
+      link.className = 'app';
+      link.href = href;
+      const icon = document.createElement('span');
+      icon.className = 'icon';
+      icon.style.background = art.bg;
+      icon.innerHTML = art.svg;
+      const label = document.createElement('span');
+      label.textContent = key.replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
+      link.append(icon, label);
+      return link;
+    }
+  </script>
   <script>
     (async () => {
       const apps = document.getElementById('apps');
+      apps.prepend(appTile('my-weather.html', 'me/my-weather.html'));
       try {
         const api = 'https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/';
         const [publicResponse, personalResponse] = await Promise.all([fetch(api), fetch(`${api}me`)]);
@@ -71,11 +95,7 @@
         ];
         apps.replaceChildren();
         for (const file of files) {
-          const link = document.createElement('a');
-          link.className = 'app';
-          link.href = file.href;
-          link.textContent = file.name.replace(/\.html$/i, '').replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
-          apps.append(link);
+          apps.append(appTile(file.name, file.href));
         }
         if (!files.length) {
           const message = document.createElement('span');
