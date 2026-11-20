@@ -38,6 +38,12 @@ window.APP_ICONS = (() => {
         <path d="M36 56V30" stroke="#f3dfba" stroke-width="4" stroke-linecap="round"/>
         <path d="M36 30c-5-8-14-8-20-3 8-1 13 0 20 3zM36 30c5-8 14-8 20-3-8-1-13 0-20 3zM36 30c-1-10-8-15-15-14 8 2 12 7 15 14zM36 30c1-10 8-15 15-14-8 2-12 7-15 14z" fill="#43b36b"/>
         <circle cx="33" cy="33" r="2.5" fill="#8a4a0c"/><circle cx="39" cy="33" r="2.5" fill="#8a4a0c"/>`)
+    },
+    hjarta: {
+      bg: 'linear-gradient(145deg,#c9364b,#7a1f2b)',
+      svg: svg(`
+        <path d="M36 59S11 44 11 27c0-8 6-14 14-14 5 0 9 3 11 8 2-5 6-8 11-8 8 0 14 6 14 14 0 17-25 32-25 32Z" fill="#fff" opacity=".96"/>
+        <path d="M15 37h12l5-10 8 19 5-9h12" stroke="#c9364b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`)
     }
   };
   const fallback = {
