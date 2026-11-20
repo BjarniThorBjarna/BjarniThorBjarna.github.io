@@ -2,81 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#0b1d3a">
-  <title>My apps</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1c2a5c">
+  <title>My Apps</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+      --bg: #f2f4f8;
+      --ink: #172033;
+      --muted: #596579;
+      --tile: #fff;
+      --edge: #dce2ed;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111827; --ink: #f3f5fa; --muted: #b6c0d0; --tile: #1d293b; --edge: #334157; }
+    }
     * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100svh;
-      color: #fff;
-      background: radial-gradient(ellipse at top left, #275a92, transparent 65%),
-        radial-gradient(ellipse at bottom right, #283b72, transparent 65%), #0b1d3a;
-    }
-    main {
-      max-width: 900px;
-      margin: auto;
-      padding: max(48px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right))
-        max(48px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
-    }
-    h1 { margin: 0; font-size: clamp(32px, 6vw, 48px); font-weight: 600; letter-spacing: -.04em; }
-    p { margin: 10px 0 36px; color: #bfcee4; }
-    .apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 24px; }
+    body { margin: 0; min-height: 100svh; color: var(--ink); background: var(--bg); }
+    main { width: min(100%, 1000px); margin: auto; padding: 32px 20px max(40px, env(safe-area-inset-bottom)); }
+    h1 { margin: 0; font-size: clamp(32px, 8vw, 48px); letter-spacing: -.04em; }
+    p { margin: 8px 0 28px; color: var(--muted); }
+    .apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .app {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      border-radius: 24px;
-      color: inherit;
-      text-decoration: none;
-      text-align: center;
+      display: grid; place-items: center; min-height: 150px; padding: 18px;
+      border: 1px solid var(--edge); border-radius: 22px; background: var(--tile);
+      color: var(--ink); text-align: center; text-decoration: none; font-size: 18px; font-weight: 600;
+      box-shadow: 0 8px 24px #17203312;
     }
-    .app:hover { background: #ffffff0d; }
-    .app:focus-visible { outline: 3px solid #ffd166; outline-offset: 4px; }
-    .icon {
-      display: grid;
-      place-items: center;
-      width: 96px;
-      height: 96px;
-      border-radius: 24px;
-      background: linear-gradient(145deg, #55c5ff, #1666d8);
-      border: 1px solid #ffffff40;
-      box-shadow: 0 12px 28px #00000030, inset 0 1px 0 #ffffff50;
+    .app:hover { border-color: #1c2a5c; transform: translateY(-2px); }
+    .app:focus-visible { outline: 3px solid #1c2a5c; outline-offset: 3px; }
+    .message { grid-column: 1 / -1; color: var(--muted); }
+    @media (min-width: 700px) {
+      main { padding-top: 56px; }
+      .apps { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
+      .app { min-height: 190px; font-size: 20px; }
     }
-    .app-name { font-size: 15px; font-weight: 500; }
+    @media (prefers-reduced-motion: reduce) { .app { transition: none; } }
   </style>
+  <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js');</script>
 </head>
 <body>
   <main>
-    <h1>My apps</h1>
-    <p>Your own little home screen. Tap an app to open it.</p>
-    <nav class="apps" aria-label="Apps">
-      <a class="app" href="my-weather.html">
-        <span class="icon">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-            <path d="M28 7v5M28 44v5M7 28h5M44 28h5M13 13l4 4M39 39l4 4M13 43l4-4M39 17l4-4"
-              stroke="#ffe59b" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="28" cy="28" r="12" fill="#ffd166"/>
-            <path d="M27 57h27a11 11 0 0 0 1-22 14 14 0 0 0-26-4 13 13 0 0 0-2 26Z" fill="#fff"/>
-          </svg>
-        </span>
-        <span class="app-name">My weather</span>
-      </a>
-      <a class="app" href="backgammon.html">
-        <span class="icon" style="background:linear-gradient(145deg,#c99451,#71452d)">
-          <svg width="72" height="72" viewBox="0 0 72 72" fill="none" aria-hidden="true">
-            <rect x="12" y="8" width="48" height="56" rx="8" fill="#f3dfba" stroke="#502b20" stroke-width="4"/>
-            <path d="M36 10v52M19 16l8 20-8 20M53 16l-8 20 8 20" stroke="#71452d" stroke-width="4" stroke-linejoin="round"/>
-            <circle cx="27" cy="25" r="5" fill="#252525"/><circle cx="45" cy="47" r="5" fill="#fff" stroke="#502b20" stroke-width="2"/>
-          </svg>
-        </span>
-        <span class="app-name">Backgammon</span>
-      </a>
-    </nav>
+    <h1>My Apps</h1>
+    <p>Your apps, ready to open.</p>
+    <nav class="apps" id="apps" aria-label="Apps"><span class="message">Loading apps…</span></nav>
   </main>
+  <script>
+    (async () => {
+      const apps = document.getElementById('apps');
+      try {
+        const response = await fetch('https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/');
+        if (!response.ok) throw new Error(`GitHub contents API returned ${response.status}`);
+        const entries = await response.json();
+        const files = entries.filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html');
+        apps.replaceChildren();
+        for (const file of files) {
+          const link = document.createElement('a');
+          link.className = 'app';
+          link.href = file.name;
+          link.textContent = file.name.replace(/\.html$/i, '').replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
+          apps.append(link);
+        }
+        if (!files.length) apps.innerHTML = '<span class="message">No apps found.</span>';
+      } catch (error) {
+        apps.innerHTML = '<span class="message">Could not load app list</span>';
+      }
+    })();
+  </script>
 </body>
 </html>

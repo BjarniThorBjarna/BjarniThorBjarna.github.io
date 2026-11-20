@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#1c2a5c">
+  <title>My Private Apps</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: system-ui, sans-serif;
+      --bg: #f2f4f8;
+      --ink: #172033;
+      --muted: #596579;
+      --tile: #fff;
+      --edge: #dce2ed;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #111827; --ink: #f3f5fa; --muted: #b6c0d0; --tile: #1d293b; --edge: #334157; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100svh; color: var(--ink); background: var(--bg); }
+    main { width: min(100%, 1000px); margin: auto; padding: 32px 20px max(40px, env(safe-area-inset-bottom)); }
+    h1 { margin: 0; font-size: clamp(32px, 8vw, 48px); letter-spacing: -.04em; }
+    p { margin: 8px 0 28px; color: var(--muted); }
+    .apps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .app {
+      display: grid; place-items: center; min-height: 150px; padding: 18px;
+      border: 1px solid var(--edge); border-radius: 22px; background: var(--tile);
+      color: var(--ink); text-align: center; text-decoration: none; font-size: 18px; font-weight: 600;
+      box-shadow: 0 8px 24px #17203312;
+    }
+    .app:hover { border-color: #1c2a5c; transform: translateY(-2px); }
+    .app:focus-visible { outline: 3px solid #1c2a5c; outline-offset: 3px; }
+    .message { grid-column: 1 / -1; color: var(--muted); }
+    @media (min-width: 700px) {
+      main { padding-top: 56px; }
+      .apps { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 20px; }
+      .app { min-height: 190px; font-size: 20px; }
+    }
+    @media (prefers-reduced-motion: reduce) { .app { transition: none; } }
+  </style>
+  <script>if('serviceWorker' in navigator)navigator.serviceWorker.register('../sw.js');</script>
+</head>
+<body>
+  <main>
+    <h1>My Private Apps</h1>
+    <p>Your apps, ready to open.</p>
+    <nav class="apps" id="apps" aria-label="Apps"><span class="message">Loading apps…</span></nav>
+  </main>
+  <script>
+    (async () => {
+      const apps = document.getElementById('apps');
+      try {
+        const response = await fetch('https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/me');
+        if (!response.ok) throw new Error(`GitHub contents API returned ${response.status}`);
+        const entries = await response.json();
+        const files = entries.filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html');
+        apps.replaceChildren();
+        for (const file of files) {
+          const link = document.createElement('a');
+          link.className = 'app';
+          link.href = file.name;
+          link.textContent = file.name.replace(/\.html$/i, '').replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
+          apps.append(link);
+        }
+        if (!files.length) apps.innerHTML = '<span class="message">No apps found.</span>';
+      } catch (error) {
+        apps.innerHTML = '<span class="message">Could not load app list</span>';
+      }
+    })();
+  </script>
+</body>
+</html>
