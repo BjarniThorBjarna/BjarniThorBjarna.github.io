@@ -48,7 +48,10 @@
   <main>
     <h1>My Apps</h1>
     <p>Your apps, ready to open.</p>
-    <nav class="apps" id="apps" aria-label="Apps"><span class="message">Loading apps…</span></nav>
+    <nav class="apps" id="apps" aria-label="Apps">
+      <a class="app" href="me/my-weather.html">My weather</a>
+      <span class="message">Loading apps…</span>
+    </nav>
   </main>
   <script>
     (async () => {
@@ -74,9 +77,18 @@
           link.textContent = file.name.replace(/\.html$/i, '').replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
           apps.append(link);
         }
-        if (!files.length) apps.innerHTML = '<span class="message">No apps found.</span>';
+        if (!files.length) {
+          const message = document.createElement('span');
+          message.className = 'message';
+          message.textContent = 'No other apps found.';
+          apps.append(message);
+        }
       } catch (error) {
-        apps.innerHTML = '<span class="message">Could not load app list</span>';
+        apps.querySelector('.message')?.remove();
+        const message = document.createElement('span');
+        message.className = 'message';
+        message.textContent = 'Could not load additional apps';
+        apps.append(message);
       }
     })();
   </script>
