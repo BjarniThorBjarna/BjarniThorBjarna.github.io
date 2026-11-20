@@ -54,15 +54,23 @@
     (async () => {
       const apps = document.getElementById('apps');
       try {
-        const response = await fetch('https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/');
-        if (!response.ok) throw new Error(`GitHub contents API returned ${response.status}`);
-        const entries = await response.json();
-        const files = entries.filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html');
+        const api = 'https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/';
+        const [publicResponse, personalResponse] = await Promise.all([fetch(api), fetch(`${api}me`)]);
+        if (!publicResponse.ok || !personalResponse.ok) throw new Error('GitHub contents API request failed');
+        const [publicEntries, personalEntries] = await Promise.all([publicResponse.json(), personalResponse.json()]);
+        const files = [
+          ...publicEntries
+            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html')
+            .map(entry => ({ name: entry.name, href: entry.name })),
+          ...personalEntries
+            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html')
+            .map(entry => ({ name: entry.name, href: `me/${entry.name}` }))
+        ];
         apps.replaceChildren();
         for (const file of files) {
           const link = document.createElement('a');
           link.className = 'app';
-          link.href = file.name;
+          link.href = file.href;
           link.textContent = file.name.replace(/\.html$/i, '').replace(/[-_]/g, ' ').replace(/^./, c => c.toUpperCase());
           apps.append(link);
         }
