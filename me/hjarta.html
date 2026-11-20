@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#1c2a5c">
+<title>Hjartsláttur</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('../sw.js');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#faf6f4;--card:#fff;--ink:#2a1c1e;--mute:#7c6a6c;--line:#eadfdc;--acc:#b3263a;--accd:#7a1f2b;--soft:#f8e4e6;--ok:#2f7a55}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Barlow,system-ui,sans-serif;overflow-x:clip;padding-bottom:84px}
+button,input,textarea,select{font:inherit;color:inherit}
+header{background:linear-gradient(160deg,var(--accd),var(--acc));color:#fff;padding:18px 18px 22px;padding-top:max(18px,env(safe-area-inset-top))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+h1{font:700 28px/1.1 "Barlow Condensed",sans-serif;margin:0;letter-spacing:.3px;display:flex;align-items:center;gap:10px}
+.beat{width:28px;height:28px;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,60%,100%{transform:scale(1)}20%{transform:scale(1.15)}40%{transform:scale(1.04)}}
+@media (prefers-reduced-motion:reduce){.beat{animation:none}}
+.sub{margin:6px 0 0;opacity:.85;font-size:15px}
+.chipbtn{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:10px;min-height:44px;min-width:52px;font-weight:700;cursor:pointer}
+main{max-width:640px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+.quick{display:block;width:100%;border:0;border-radius:16px;background:var(--acc);color:#fff;font:700 22px/1.2 "Barlow Condensed",sans-serif;padding:20px 16px;cursor:pointer;box-shadow:0 6px 18px rgba(179,38,58,.25);margin-bottom:14px}
+.quick small{display:block;font:500 14px Barlow,sans-serif;opacity:.9;margin-top:4px}
+.quick:active{transform:scale(.99)}
+h2{font:700 19px "Barlow Condensed",sans-serif;margin:0 0 10px;letter-spacing:.2px}
+h3{font-size:14px;font-weight:600;color:var(--mute);margin:16px 0 8px;text-transform:uppercase;letter-spacing:.5px}
+h3:first-of-type{margin-top:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 14px;min-height:40px;cursor:pointer;font-size:15px}
+.chip[aria-pressed="true"]{background:var(--soft);border-color:var(--acc);color:var(--accd);font-weight:600}
+.chip.add{border-style:dashed;color:var(--mute)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+input[type=datetime-local],input[type=number],input[type=text],textarea,select{border:1.5px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff;min-height:44px;width:100%}
+textarea{min-height:70px;resize:vertical}
+.when{font-weight:600}
+.scale{display:flex;gap:6px}
+.scale button{flex:1;min-height:44px;border:1.5px solid var(--line);background:#fff;border-radius:10px;cursor:pointer;font-weight:600}
+.scale button[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.save{width:100%;margin-top:16px;border:0;border-radius:14px;background:var(--accd);color:#fff;font-weight:700;font-size:17px;min-height:52px;cursor:pointer}
+.ghost{background:none;border:1.5px solid var(--line);border-radius:12px;min-height:44px;padding:0 14px;cursor:pointer}
+.danger{color:var(--acc);border-color:#efc7cc}
+nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1;border:0;background:none;min-height:60px;font-weight:600;color:var(--mute);cursor:pointer;font-size:15px}
+nav button[aria-current="true"]{color:var(--acc);box-shadow:inset 0 3px 0 var(--acc)}
+.view[hidden]{display:none}
+.day{font:700 16px "Barlow Condensed",sans-serif;color:var(--mute);margin:18px 4px 8px;text-transform:uppercase;letter-spacing:.5px}
+.entry{display:block;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;cursor:pointer}
+.entry .t{font-weight:700;font-size:17px}
+.entry .k{color:var(--accd);font-weight:600;margin-left:6px}
+.entry .s{color:var(--mute);font-size:14px;margin-top:2px}
+.tag{display:inline-block;background:var(--soft);color:var(--accd);border-radius:6px;padding:1px 7px;font-size:13px;margin:4px 4px 0 0}
+.tag.warn{background:#fff1d6;color:#7a5200}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font:700 28px "Barlow Condensed",sans-serif;color:var(--accd)}
+.stat span{font-size:13px;color:var(--mute)}
+.bars{display:flex;flex-direction:column;gap:6px}
+.bar{display:grid;grid-template-columns:minmax(90px,38%) 1fr 34px;gap:8px;align-items:center;font-size:14px}
+.bar i{display:block;height:14px;border-radius:4px;background:var(--acc)}
+.bar em{font-style:normal;text-align:right;color:var(--mute)}
+svg text{font:12px Barlow,sans-serif;fill:var(--mute)}
+.empty{color:var(--mute);text-align:center;padding:24px 8px}
+.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
+.toast.on{opacity:1}
+.note{font-size:14px;color:var(--mute);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.edit{background:#fff4d9;border:1px solid #eed49b;border-radius:12px;padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.edit[hidden]{display:none}
+.filters{display:flex;gap:8px;margin-bottom:6px}
+.filters select{width:auto;flex:1}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1><svg class="beat" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.1 4.4 2.5.4.6 1.4.6 1.8 0 .8-1.4 2.3-2.5 4.4-2.5 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg><span data-t="title"></span></h1>
+    <button class="chipbtn" id="langBtn" type="button"></button>
+  </div>
+  <p class="sub" data-t="sub"></p>
+</header>
+
+<main>
+<!-- LOG -->
+<section class="view" id="v-log">
+  <button class="quick" id="quickBtn" type="button"><span data-t="quick"></span><small data-t="quickSub"></small></button>
+
+  <div class="card">
+    <div class="edit" id="editBar" hidden><span data-t="editing"></span><button class="ghost" id="cancelEdit" type="button" data-t="cancel"></button></div>
+    <h2 data-t="detail"></h2>
+
+    <h3 data-t="when"></h3>
+    <input type="datetime-local" id="when" class="when">
+    <div class="chips" style="margin-top:8px" id="whenChips"></div>
+
+    <h3 data-t="kind"></h3>
+    <div class="chips" id="kindChips"></div>
+
+    <h3 data-t="sit"></h3>
+    <div class="chips" id="sitChips"></div>
+
+    <h3 data-t="sym"></h3>
+    <div class="chips" id="symChips"></div>
+
+    <h3 data-t="dur"></h3>
+    <div class="chips" id="durChips"></div>
+
+    <h3 data-t="inten"></h3>
+    <div class="scale" id="intenScale"></div>
+
+    <h3 data-t="pulse"></h3>
+    <input type="number" id="pulse" inputmode="numeric" min="20" max="250" data-ph="pulsePh">
+
+    <h3 data-t="noteL"></h3>
+    <textarea id="note" data-ph="notePh"></textarea>
+
+    <button class="save" id="saveBtn" type="button" data-t="save"></button>
+    <button class="ghost danger" id="delBtn" type="button" style="width:100%;margin-top:10px" hidden data-t="del"></button>
+  </div>
+  <p class="note" data-t="safety"></p>
+</section>
+
+<!-- HISTORY -->
+<section class="view" id="v-hist" hidden>
+  <div class="filters">
+    <select id="fRange"></select>
+    <select id="fSit"></select>
+  </div>
+  <div id="histList"></div>
+</section>
+
+<!-- STATS -->
+<section class="view" id="v-stats" hidden>
+  <div class="filters"><select id="sRange"></select></div>
+  <div class="stats" id="statTiles"></div>
+  <div class="card"><h2 data-t="perDay"></h2><div id="dayChart"></div></div>
+  <div class="card"><h2 data-t="byHour"></h2><div id="hourChart"></div></div>
+  <div class="card"><h2 data-t="topSit"></h2><div class="bars" id="sitBars"></div></div>
+  <div class="card"><h2 data-t="topKind"></h2><div class="bars" id="kindBars"></div></div>
+</section>
+
+<!-- DATA -->
+<section class="view" id="v-data" hidden>
+  <div class="card">
+    <h2 data-t="exportH"></h2>
+    <p style="margin-top:0;color:var(--mute)" data-t="exportP"></p>
+    <div class="row">
+      <button class="ghost" id="csvBtn" type="button" data-t="csv"></button>
+      <button class="ghost" id="copyBtn" type="button" data-t="copy"></button>
+      <button class="ghost" id="jsonBtn" type="button" data-t="backup"></button>
+    </div>
+  </div>
+  <div class="card">
+    <h2 data-t="importH"></h2>
+    <p style="margin-top:0;color:var(--mute)" data-t="importP"></p>
+    <input type="file" id="importFile" accept=".json,application/json">
+  </div>
+  <div class="card">
+    <h2 data-t="mySit"></h2>
+    <p style="margin-top:0;color:var(--mute)" data-t="mySitP"></p>
+    <div class="chips" id="customList"></div>
+  </div>
+  <div class="card">
+    <h2 data-t="wipeH"></h2>
+    <button class="ghost danger" id="wipeBtn" type="button" data-t="wipe"></button>
+  </div>
+</section>
+</main>
+
+<nav>
+  <button type="button" data-v="log" data-t="navLog"></button>
+  <button type="button" data-v="hist" data-t="navHist"></button>
+  <button type="button" data-v="stats" data-t="navStats"></button>
+  <button type="button" data-v="data" data-t="navData"></button>
+</nav>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const LG={
+is:{title:'Hjartsláttur',sub:'Skráðu aukaslög og aðstæður',quick:'Ég fann aukaslag núna',quickSub:'Skráir tímann strax, þú getur bætt við á eftir',
+detail:'Nánar',editing:'Þú ert að breyta skráningu',cancel:'Hætta við',when:'Hvenær',kind:'Hvernig leið það',sit:'Aðstæður',sym:'Önnur einkenni',dur:'Hversu lengi',inten:'Styrkur (1 = varla, 5 = mjög sterkt)',
+pulse:'Púls (ef mældur)',pulsePh:'t.d. 72',noteL:'Athugasemd',notePh:'Hvað varstu að gera? Eitthvað sérstakt?',save:'Vista skráningu',saveEdit:'Vista breytingar',del:'Eyða skráningu',
+safety:'Þetta er skráningartæki, ekki læknisfræðilegt mat. Ef þú færð brjóstverk, mikla mæði, yfirlið eða hjartsláttur hættir ekki, hringdu í 112. Taktu yfirlitið með þér til læknis.',
+navLog:'Skrá',navHist:'Saga',navStats:'Yfirlit',navData:'Gögn',
+now:'Núna','m5':'−5 mín','m15':'−15 mín','h1':'−1 klst','h3':'−3 klst',yest:'Í gær sama tíma',
+addSit:'+ Bæta við',addSitQ:'Nýjar aðstæður:',saved:'Vistað ✓',quickSaved:'Skráð {t}. Bættu við nánar ef þú vilt.',updated:'Breytingum vistað ✓',deleted:'Skráningu eytt',delQ:'Eyða þessari skráningu?',
+all:'Allt',d7:'Síðustu 7 dagar',d30:'Síðustu 30 dagar',d90:'Síðustu 90 dagar',allSit:'Allar aðstæður',
+noEntries:'Engar skráningar enn. Ýttu á rauða hnappinn þegar þú finnur aukaslag.',noMatch:'Engar skráningar passa við síuna.',
+today:'Í dag',yesterday:'Í gær',total:'Skráningar',perDayAvg:'Á dag (meðaltal)',daysWith:'Dagar með slögum',
+perDay:'Fjöldi á dag',byHour:'Tími sólarhrings',topSit:'Algengustu aðstæður',topKind:'Tegund',
+exportH:'Senda lækni / flytja út',exportP:'CSV opnast í Excel. „Afrita“ setur yfirlit í klippiborðið svo þú getir límt það í tölvupóst.',csv:'Sækja CSV',copy:'Afrita yfirlit',backup:'Afrit (JSON)',
+importH:'Flytja inn afrit',importP:'Veldu JSON-afrit úr þessu appi. Skráningum er bætt við, ekkert er yfirskrifað.',imported:'{n} skráningum bætt við',importErr:'Gat ekki lesið skrána',
+mySit:'Mínar aðstæður',mySitP:'Aðstæður sem þú bættir við. Ýttu á til að fjarlægja.',noCustom:'Engar ennþá. Notaðu „+ Bæta við“ á skráningarsíðunni.',removeQ:'Fjarlægja „{x}“ úr listanum? (Eldri skráningar halda henni.)',
+wipeH:'Eyða öllu',wipe:'Eyða öllum skráningum',wipeQ:'Eyða ÖLLUM skráningum? Þetta er ekki hægt að afturkalla. Sæktu afrit fyrst.',wiped:'Öllu eytt',copied:'Afritað í klippiborð',copyFail:'Gat ekki afritað',
+storeWarn:'Vafrinn leyfir ekki vistun hér. Skráningar týnast þegar síðunni er lokað.',
+sec:'sek',min:'mín',hdr:'Dags.;Tími;Tegund;Lengd;Styrkur;Púls;Aðstæður;Einkenni;Athugasemd',summary:'Yfirlit aukaslaga',
+days:['sunnudagur','mánudagur','þriðjudagur','miðvikudagur','fimmtudagur','föstudagur','laugardagur'],mon:['jan.','feb.','mars','apr.','maí','júní','júlí','ágú.','sep.','okt.','nóv.','des.']},
+en:{title:'Heartbeat',sub:'Log extra beats and what you were doing',quick:'I felt an extra beat now',quickSub:'Saves the time now; add details after',
+detail:'Details',editing:'Editing an entry',cancel:'Cancel',when:'When',kind:'What it felt like',sit:'Situation',sym:'Other symptoms',dur:'How long',inten:'Strength (1 = barely, 5 = very strong)',
+pulse:'Pulse (if measured)',pulsePh:'e.g. 72',noteL:'Note',notePh:'What were you doing? Anything special?',save:'Save entry',saveEdit:'Save changes',del:'Delete entry',
+safety:'This is a logging tool, not a medical assessment. If you get chest pain, severe shortness of breath, fainting, or the racing won’t stop, call emergency services (112). Take the summary to your doctor.',
+navLog:'Log',navHist:'History',navStats:'Summary',navData:'Data',
+now:'Now','m5':'−5 min','m15':'−15 min','h1':'−1 h','h3':'−3 h',yest:'Yesterday same time',
+addSit:'+ Add',addSitQ:'New situation:',saved:'Saved ✓',quickSaved:'Logged {t}. Add details if you like.',updated:'Changes saved ✓',deleted:'Entry deleted',delQ:'Delete this entry?',
+all:'All',d7:'Last 7 days',d30:'Last 30 days',d90:'Last 90 days',allSit:'All situations',
+noEntries:'No entries yet. Tap the red button when you feel an extra beat.',noMatch:'No entries match the filter.',
+today:'Today',yesterday:'Yesterday',total:'Entries',perDayAvg:'Per day (avg)',daysWith:'Days with beats',
+perDay:'Count per day',byHour:'Time of day',topSit:'Most common situations',topKind:'Type',
+exportH:'Send to doctor / export',exportP:'CSV opens in Excel. “Copy” puts a summary on the clipboard to paste into an email.',csv:'Download CSV',copy:'Copy summary',backup:'Backup (JSON)',
+importH:'Import backup',importP:'Pick a JSON backup from this app. Entries are added; nothing is overwritten.',imported:'{n} entries added',importErr:'Could not read the file',
+mySit:'My situations',mySitP:'Situations you added. Tap to remove.',noCustom:'None yet. Use “+ Add” on the log page.',removeQ:'Remove “{x}” from the list? (Old entries keep it.)',
+wipeH:'Delete everything',wipe:'Delete all entries',wipeQ:'Delete ALL entries? This cannot be undone. Download a backup first.',wiped:'All deleted',copied:'Copied to clipboard',copyFail:'Could not copy',
+storeWarn:'This browser won’t allow saving here. Entries are lost when the page closes.',
+sec:'s',min:'min',hdr:'Date;Time;Type;Duration;Strength;Pulse;Situation;Symptoms;Note',summary:'Extra heartbeat summary',
+days:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],mon:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']}
+};
+const KINDS={single:['Stakt aukaslag','Single skipped/extra beat'],several:['Nokkur í röð','Several in a row'],flutter:['Flökt','Flutter'],fast:['Hraður hjartsláttur','Racing heart'],irregular:['Óreglulegur','Irregular'],thump:['Þungt högg','Hard thump']};
+const SITS={rest:['Í hvíld','At rest'],lying:['Liggjandi','Lying down'],sleep:['Að sofna','Falling asleep'],woke:['Vaknaði við það','Woke me up'],standup:['Stóð upp','Stood up'],exercise:['Við æfingu','During exercise'],afterex:['Eftir æfingu','After exercise'],meal:['Eftir mat','After a meal'],coffee:['Kaffi / koffín','Coffee / caffeine'],alcohol:['Áfengi','Alcohol'],stress:['Streita','Stress'],tired:['Lítill svefn','Little sleep'],work:['Í vinnu','At work'],driving:['Að keyra','Driving'],screen:['Við tölvu','At the computer'],bend:['Beygði mig','Bent over']};
+const SYMS={none:['Engin','None'],dizzy:['Svimi','Dizziness'],breath:['Mæði','Short of breath'],chest:['Óþægindi í brjósti','Chest discomfort'],tired:['Þreyta','Tiredness'],anxious:['Kvíði','Anxiety'],sweat:['Sviti','Sweating']};
+const DURS={b:['1 slag','1 beat'],s:['Nokkrar sek.','A few seconds'],m:['Undir mínútu','Under a minute'],mm:['Nokkrar mín.','A few minutes'],l:['Lengur','Longer']};
+const WARN=new Set(['dizzy','breath','chest']);
+
+const KEY='hjarta-entries-v1',SKEY='hjarta-settings-v1',LKEY='hjarta-lang';
+let storeOK=true;
+function load(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){storeOK=false;return d}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){storeOK=false;return false}}
+let entries=load(KEY,[]);if(!Array.isArray(entries))entries=[];
+let settings=load(SKEY,{custom:[]});if(!Array.isArray(settings.custom))settings.custom=[];
+let LANG='is';try{LANG=localStorage.getItem(LKEY)||'is'}catch(e){}
+const L=()=>LANG==='is'?0:1;
+function U(k,v){let s=LG[LANG][k];if(s==null)s=LG.is[k]??k;if(v)for(const x in v)s=s.split('{'+x+'}').join(v[x]);return s}
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const lbl=(map,k)=>map[k]?map[k][L()]:(String(k).startsWith('c:')?String(k).slice(2):k);
+const pad=n=>String(n).padStart(2,'0');
+const toLocalInput=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`};
+const hm=ms=>{const d=new Date(ms);return pad(d.getHours())+':'+pad(d.getMinutes())};
+const dayKey=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`};
+const ymd=ms=>{const d=new Date(ms);return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`};
+function dayLabel(ms){const t=new Date();t.setHours(0,0,0,0);const d=new Date(ms);d.setHours(0,0,0,0);const diff=Math.round((t-d)/864e5);
+ if(diff===0)return U('today');if(diff===1)return U('yesterday');
+ const L2=LG[LANG];return LANG==='is'?`${L2.days[d.getDay()]} ${d.getDate()}. ${L2.mon[d.getMonth()]}${d.getFullYear()!==t.getFullYear()?' '+d.getFullYear():''}`:`${L2.days[d.getDay()]} ${d.getDate()} ${L2.mon[d.getMonth()]}${d.getFullYear()!==t.getFullYear()?' '+d.getFullYear():''}`}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),2600)}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+function persist(){entries.sort((a,b)=>b.t-a.t);if(!store(KEY,entries))toast(U('storeWarn'))}
+
+/* ---------- form state ---------- */
+let form,editId=null;
+function blank(){return{t:Date.now(),kind:null,sit:[],sym:[],dur:null,inten:null,pulse:'',note:''}}
+form=blank();
+
+function chipRow(el,map,sel,multi,onPick,extra){
+ el.innerHTML=Object.keys(map).map(k=>`<button type="button" class="chip" data-k="${esc(k)}" aria-pressed="${multi?sel.includes(k):sel===k}">${esc(map[k][L()])}</button>`).join('')+(extra||'');
+ el.querySelectorAll('.chip[data-k]').forEach(b=>b.onclick=()=>onPick(b.dataset.k));
+}
+function renderForm(){
+ $('when').value=toLocalInput(form.t);
+ const wc=[['now',0],['m5',5],['m15',15],['h1',60],['h3',180],['yest',1440]];
+ $('whenChips').innerHTML=wc.map(([k,m])=>`<button type="button" class="chip" data-m="${m}">${U(k)}</button>`).join('');
+ $('whenChips').querySelectorAll('.chip').forEach(b=>b.onclick=()=>{form.t=Date.now()-(+b.dataset.m)*60000;$('when').value=toLocalInput(form.t)});
+ chipRow($('kindChips'),KINDS,form.kind,false,k=>{form.kind=form.kind===k?null:k;renderForm()});
+ const sitMap=Object.assign({},SITS);settings.custom.forEach(c=>sitMap['c:'+c]=[c,c]);
+ form.sit.forEach(k=>{if(!sitMap[k])sitMap[k]=[lbl(SITS,k),lbl(SITS,k)]});
+ chipRow($('sitChips'),sitMap,form.sit,true,k=>{toggle(form.sit,k);renderForm()},`<button type="button" class="chip add" id="addSit">${U('addSit')}</button>`);
+ $('addSit').onclick=()=>{const v=(prompt(U('addSitQ'))||'').trim();if(!v)return;if(!settings.custom.includes(v)){settings.custom.push(v);store(SKEY,settings)}if(!form.sit.includes('c:'+v))form.sit.push('c:'+v);renderForm()};
+ chipRow($('symChips'),SYMS,form.sym,true,k=>{if(k==='none')form.sym=form.sym.includes('none')?[]:['none'];else{form.sym=form.sym.filter(x=>x!=='none');toggle(form.sym,k)}renderForm()});
+ chipRow($('durChips'),DURS,form.dur,false,k=>{form.dur=form.dur===k?null:k;renderForm()});
+ $('intenScale').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-n="${n}" aria-pressed="${form.inten===n}">${n}</button>`).join('');
+ $('intenScale').querySelectorAll('button').forEach(b=>b.onclick=()=>{const n=+b.dataset.n;form.inten=form.inten===n?null:n;renderForm()});
+ $('pulse').value=form.pulse;$('note').value=form.note;
+ $('editBar').hidden=!editId;$('delBtn').hidden=!editId;$('saveBtn').textContent=editId?U('saveEdit'):U('save');
+}
+function toggle(a,k){const i=a.indexOf(k);i<0?a.push(k):a.splice(i,1)}
+$('when').addEventListener('change',e=>{const v=new Date(e.target.value).getTime();if(!isNaN(v))form.t=v});
+$('pulse').addEventListener('input',e=>form.pulse=e.target.value);
+$('note').addEventListener('input',e=>form.note=e.target.value);
+
+function entryFromForm(){return{t:form.t,kind:form.kind,sit:[...form.sit],sym:[...form.sym],dur:form.dur,inten:form.inten,pulse:form.pulse?+form.pulse:null,note:form.note.trim()}}
+$('quickBtn').onclick=()=>{
+ const e={id:uid(),t:Date.now(),kind:null,sit:[],sym:[],dur:null,inten:null,pulse:null,note:''};
+ entries.push(e);persist();editId=e.id;form=Object.assign(blank(),e,{pulse:''});renderForm();
+ if(navigator.vibrate)try{navigator.vibrate(30)}catch(_){}
+ toast(U('quickSaved',{t:hm(e.t)}));$('kindChips').scrollIntoView({behavior:'smooth',block:'center'});
+};
+$('saveBtn').onclick=()=>{
+ const data=entryFromForm();
+ if(editId){const i=entries.findIndex(x=>x.id===editId);if(i>=0)entries[i]=Object.assign(entries[i],data);toast(U('updated'))}
+ else{entries.push(Object.assign({id:uid()},data));toast(U('saved'))}
+ persist();editId=null;form=blank();renderForm();window.scrollTo({top:0,behavior:'smooth'});
+};
+$('cancelEdit').onclick=()=>{editId=null;form=blank();renderForm()};
+$('delBtn').onclick=()=>{if(!confirm(U('delQ')))return;entries=entries.filter(x=>x.id!==editId);persist();editId=null;form=blank();renderForm();toast(U('deleted'))};
+function openEdit(id){const e=entries.find(x=>x.id===id);if(!e)return;editId=id;form=Object.assign(blank(),JSON.parse(JSON.stringify(e)),{pulse:e.pulse??''});show('log');renderForm();window.scrollTo({top:0})}
+
+/* ---------- history ---------- */
+function rangeOpts(sel){const v=sel.value||'30';sel.innerHTML=[['7','d7'],['30','d30'],['90','d90'],['all','all']].map(([x,k])=>`<option value="${x}">${U(k)}</option>`).join('');sel.value=v}
+function inRange(list,r){if(r==='all')return list;const from=new Date();from.setHours(0,0,0,0);from.setDate(from.getDate()-(+r-1));return list.filter(e=>e.t>=from.getTime())}
+function allSitKeys(){const s=new Set();entries.forEach(e=>(e.sit||[]).forEach(k=>s.add(k)));return[...s]}
+function renderHist(){
+ rangeOpts($('fRange'));const fs=$('fSit').value||'';
+ $('fSit').innerHTML=`<option value="">${U('allSit')}</option>`+allSitKeys().map(k=>`<option value="${esc(k)}">${esc(lbl(SITS,k))}</option>`).join('');$('fSit').value=fs;
+ let list=inRange(entries,$('fRange').value);if(fs)list=list.filter(e=>(e.sit||[]).includes(fs));
+ if(!entries.length){$('histList').innerHTML=`<p class="empty">${U('noEntries')}</p>`;return}
+ if(!list.length){$('histList').innerHTML=`<p class="empty">${U('noMatch')}</p>`;return}
+ let html='',cur='';
+ list.forEach(e=>{const dk=dayKey(e.t);if(dk!==cur){cur=dk;const n=list.filter(x=>dayKey(x.t)===dk).length;html+=`<div class="day">${esc(dayLabel(e.t))} · ${n}</div>`}
+  const bits=[];if(e.dur)bits.push(lbl(DURS,e.dur));if(e.inten)bits.push(U('inten').split(' ')[0]+' '+e.inten+'/5');if(e.pulse)bits.push(e.pulse+' bpm');
+  const tags=(e.sit||[]).map(k=>`<span class="tag">${esc(lbl(SITS,k))}</span>`).join('')+(e.sym||[]).filter(k=>k!=='none').map(k=>`<span class="tag${WARN.has(k)?' warn':''}">${esc(lbl(SYMS,k))}</span>`).join('');
+  html+=`<button type="button" class="entry" data-id="${e.id}"><span class="t">${hm(e.t)}</span>${e.kind?`<span class="k">${esc(lbl(KINDS,e.kind))}</span>`:''}${bits.length?`<div class="s">${esc(bits.join(' · '))}</div>`:''}${tags?`<div>${tags}</div>`:''}${e.note?`<div class="s">${esc(e.note)}</div>`:''}</button>`});
+ $('histList').innerHTML=html;$('histList').querySelectorAll('.entry').forEach(b=>b.onclick=()=>openEdit(b.dataset.id));
+}
+$('fRange').onchange=renderHist;$('fSit').onchange=renderHist;
+
+/* ---------- stats ---------- */
+function bars(el,pairs,total){if(!pairs.length){el.innerHTML=`<p class="empty" style="padding:8px">—</p>`;return}const max=Math.max(...pairs.map(p=>p[1]));
+ el.innerHTML=pairs.map(([n,c])=>`<div class="bar"><span>${esc(n)}</span><i style="width:${Math.max(4,c/max*100)}%"></i><em>${c}</em></div>`).join('')}
+function renderStats(){
+ rangeOpts($('sRange'));const r=$('sRange').value;const list=inRange(entries,r);
+ let nDays;if(r==='all'){nDays=list.length?Math.max(1,Math.round((new Date().setHours(23,59,59,999)-Math.min(...list.map(e=>e.t)))/864e5)):1}else nDays=+r;
+ const days=new Set(list.map(e=>dayKey(e.t)));
+ const avg=(list.length/nDays);
+ $('statTiles').innerHTML=`<div class="stat"><b>${list.length}</b><span>${U('total')}</span></div><div class="stat"><b>${avg.toLocaleString(LANG==='is'?'is':'en',{maximumFractionDigits:1})}</b><span>${U('perDayAvg')}</span></div><div class="stat"><b>${days.size}</b><span>${U('daysWith')}</span></div>`;
+ // per day chart
+ const showDays=Math.min(nDays,r==='all'?60:+r),W=600,H=150,pb=22,cnt=[];
+ for(let i=showDays-1;i>=0;i--){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-i);const k=dayKey(d.getTime());cnt.push([d,list.filter(e=>dayKey(e.t)===k).length])}
+ const mx=Math.max(1,...cnt.map(c=>c[1])),bw=W/cnt.length;
+ let svg=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">`;
+ cnt.forEach(([d,c],i)=>{const h=c/mx*(H-pb-14);svg+=`<rect x="${i*bw+bw*.15}" y="${H-pb-h}" width="${bw*.7}" height="${Math.max(c?2:0,h)}" rx="2" fill="#b3263a"><title>${ymd(d.getTime())}: ${c}</title></rect>`;
+  const step=Math.ceil(cnt.length/7);if(i%step===0||i===cnt.length-1)svg+=`<text x="${i===0?0:i===cnt.length-1?W:i*bw+bw/2}" y="${H-6}" text-anchor="${i===0?'start':i===cnt.length-1?'end':'middle'}">${d.getDate()}.${d.getMonth()+1}</text>`});
+ svg+=`<text x="0" y="11">${mx}</text><line x1="0" x2="${W}" y1="${H-pb}" y2="${H-pb}" stroke="#eadfdc"/></svg>`;$('dayChart').innerHTML=svg;
+ // hour chart
+ const hr=Array(24).fill(0);list.forEach(e=>hr[new Date(e.t).getHours()]++);const hm2=Math.max(1,...hr),hb=W/24;
+ let s2=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img">`;
+ hr.forEach((c,i)=>{const h=c/hm2*(H-pb-14);s2+=`<rect x="${i*hb+hb*.12}" y="${H-pb-h}" width="${hb*.76}" height="${Math.max(c?2:0,h)}" rx="2" fill="#7a1f2b"><title>${pad(i)}:00 – ${c}</title></rect>`;if(i%3===0)s2+=`<text x="${i*hb+hb/2}" y="${H-6}" text-anchor="middle">${pad(i)}</text>`});
+ s2+=`<text x="0" y="11">${hm2}</text><line x1="0" x2="${W}" y1="${H-pb}" y2="${H-pb}" stroke="#eadfdc"/></svg>`;$('hourChart').innerHTML=s2;
+ const sc={};list.forEach(e=>(e.sit||[]).forEach(k=>sc[k]=(sc[k]||0)+1));
+ bars($('sitBars'),Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,c])=>[lbl(SITS,k),c]));
+ const kc={};list.forEach(e=>{if(e.kind)kc[e.kind]=(kc[e.kind]||0)+1});
+ bars($('kindBars'),Object.entries(kc).sort((a,b)=>b[1]-a[1]).map(([k,c])=>[lbl(KINDS,k),c]));
+}
+$('sRange').onchange=renderStats;
+
+/* ---------- data ---------- */
+function rows(){return[...entries].sort((a,b)=>a.t-b.t).map(e=>[ymd(e.t),hm(e.t),e.kind?lbl(KINDS,e.kind):'',e.dur?lbl(DURS,e.dur):'',e.inten??'',e.pulse??'',(e.sit||[]).map(k=>lbl(SITS,k)).join(', '),(e.sym||[]).map(k=>lbl(SYMS,k)).join(', '),e.note||''])}
+let DL=null;if(window.claude&&window.claude.use)window.claude.use('downloads').then(d=>DL=d).catch(()=>{});
+async function download(name,text,type){if(DL){try{await DL.save({filename:name,data:text})}catch(e){}return}if(window.claude)return toast(U('copyFail'));const b=new Blob([text],{type});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+$('csvBtn').onclick=()=>{const q=v=>{v=String(v);return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};download(`hjartslattur-${dayKey(Date.now())}.csv`,'﻿'+U('hdr')+'\n'+rows().map(r=>r.map(q).join(';')).join('\n'),'text/csv;charset=utf-8')};
+$('jsonBtn').onclick=()=>download(`hjartslattur-afrit-${dayKey(Date.now())}.json`,JSON.stringify({app:'hjarta',v:1,entries,settings},null,1),'application/json');
+$('copyBtn').onclick=async()=>{
+ const list=inRange(entries,'30'),sc={};list.forEach(e=>(e.sit||[]).forEach(k=>sc[k]=(sc[k]||0)+1));
+ const top=Object.entries(sc).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,c])=>`${lbl(SITS,k)} (${c})`).join(', ');
+ const txt=`${U('summary')} – ${U('d30').toLowerCase()}\n${U('total')}: ${list.length} · ${U('daysWith')}: ${new Set(list.map(e=>dayKey(e.t))).size}\n${U('topSit')}: ${top||'—'}\n\n`+rows().filter(r=>list.length).slice(-list.length).map(r=>r.filter(Boolean).join(' · ')).join('\n');
+ try{await navigator.clipboard.writeText(txt);toast(U('copied'))}catch(e){toast(U('copyFail'))}};
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{const d=JSON.parse(rd.result);const inc=Array.isArray(d)?d:d.entries;if(!Array.isArray(inc))throw 0;
+ const have=new Set(entries.map(x=>x.id));let n=0;inc.forEach(x=>{if(x&&typeof x.t==='number'&&!have.has(x.id)){entries.push(Object.assign({id:uid(),sit:[],sym:[]},x));n++}});
+ if(d.settings&&Array.isArray(d.settings.custom))d.settings.custom.forEach(c=>{if(!settings.custom.includes(c))settings.custom.push(c)});store(SKEY,settings);
+ persist();toast(U('imported',{n}));renderData()}catch(_){toast(U('importErr'))}e.target.value=''};rd.readAsText(f)};
+function renderData(){const el=$('customList');el.innerHTML=settings.custom.length?settings.custom.map(c=>`<button type="button" class="chip" data-c="${esc(c)}">${esc(c)} ✕</button>`).join(''):`<span style="color:var(--mute)">${U('noCustom')}</span>`;
+ el.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{if(!confirm(U('removeQ',{x:b.dataset.c})))return;settings.custom=settings.custom.filter(x=>x!==b.dataset.c);store(SKEY,settings);renderData()})}
+$('wipeBtn').onclick=()=>{if(!confirm(U('wipeQ')))return;entries=[];persist();toast(U('wiped'))};
+
+/* ---------- nav & lang ---------- */
+let view='log';
+function show(v){view=v;document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));
+ if(v==='hist')renderHist();if(v==='stats')renderStats();if(v==='data')renderData();if(v==='log')renderForm()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{show(b.dataset.v);window.scrollTo({top:0})});
+function statics(){document.documentElement.lang=LANG;document.title=U('title');
+ document.querySelectorAll('[data-t]').forEach(el=>el.textContent=U(el.dataset.t));
+ document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=U(el.dataset.ph));
+ $('langBtn').textContent=LANG==='is'?'EN':'IS';$('langBtn').setAttribute('aria-label',LANG==='is'?'English':'Íslenska')}
+$('langBtn').onclick=()=>{LANG=LANG==='is'?'en':'is';try{localStorage.setItem(LKEY,LANG)}catch(e){}statics();show(view)};
+statics();show('log');if(!storeOK)toast(U('storeWarn'));
+</script>
+</body>
+</html>
