@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#2f5d46">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Vindó – starfsmannahandbókin mín</title>
+<style>
+:root{
+  --green:#2f5d46; --green2:#4f8a6b; --moss:#e8f1ea; --pink:#e46f9a; --pink2:#fbe3ec;
+  --ink:#1f2a24; --muted:#5f6d65; --card:#fff; --bg:#f6f4ef; --line:#e3e0d8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5;padding-bottom:84px}
+header{background:linear-gradient(160deg,var(--green),#244a37);color:#fff;padding:22px 18px 18px;padding-top:calc(22px + env(safe-area-inset-top))}
+header h1{margin:0;font-size:1.55rem;letter-spacing:.2px}
+header p{margin:4px 0 0;opacity:.85;font-size:.92rem}
+#now{margin-top:14px;background:rgba(255,255,255,.12);border-radius:14px;padding:10px 12px;font-size:.92rem}
+#now b{color:#ffd3e3}
+main{max-width:760px;margin:0 auto;padding:14px}
+section{display:none}
+section.active{display:block}
+h2{font-size:1.25rem;margin:8px 0 10px;color:var(--green)}
+h3{font-size:1.02rem;margin:14px 0 6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:0 0 12px}
+.pill{display:inline-block;background:var(--moss);color:var(--green);border-radius:999px;padding:2px 10px;font-size:.78rem;margin:2px 4px 2px 0}
+.pill.pink{background:var(--pink2);color:#a8335f}
+.muted{color:var(--muted);font-size:.88rem}
+ul{padding-left:20px;margin:6px 0}
+li{margin:3px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:.8rem}
+td.t{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600;color:var(--green);width:62px}
+tr.cur td{background:var(--pink2)}
+a{color:#2b6c9e}
+.btn{display:inline-block;border:0;background:var(--green);color:#fff;border-radius:10px;padding:9px 14px;font-size:.92rem;cursor:pointer;text-decoration:none}
+.btn.alt{background:var(--moss);color:var(--green)}
+.btn.pink{background:var(--pink)}
+.btn.sm{padding:5px 10px;font-size:.82rem}
+input,textarea,select{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;margin:4px 0 8px}
+textarea{min-height:120px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;cursor:pointer;text-align:left;font:inherit;color:inherit}
+.tile .e{font-size:1.5rem}
+.tile b{display:block;margin-top:4px}
+.tile span{font-size:.8rem;color:var(--muted)}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;overflow-x:auto;padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav button{flex:1 0 auto;min-width:68px;border:0;background:none;padding:8px 6px 9px;font:inherit;font-size:.7rem;color:var(--muted);cursor:pointer}
+nav button .i{display:block;font-size:1.25rem}
+nav button.on{color:var(--green);font-weight:700}
+.song{border-top:1px solid var(--line);padding:10px 0}
+.song:first-child{border-top:0}
+.song pre{white-space:pre-wrap;font-family:inherit;margin:8px 0 0;background:var(--moss);padding:10px;border-radius:10px;display:none}
+.song.open pre{display:block}
+.song h4{margin:0;cursor:pointer;display:flex;justify-content:space-between;gap:8px}
+.check label{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-bottom:1px dashed var(--line)}
+.check input{width:auto;margin:4px 0 0}
+.emerg{background:#fff1f1;border-color:#f3c4c4}
+.emerg a.big{display:block;font-size:1.25rem;font-weight:700;color:#b42318;text-decoration:none;padding:6px 0}
+iframe{border:0;border-radius:12px;width:100%}
+.note{border-left:4px solid var(--pink);padding:8px 12px;background:var(--pink2);border-radius:8px;font-size:.88rem;margin:8px 0}
+#search{margin-bottom:4px}
+.small{font-size:.8rem}
+@media (min-width:640px){.grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 Vindáshlíð</h1>
+  <p>Handbókin mín sem starfskona í Hlíðinni fríðu</p>
+  <div id="now">Hleð dagskrá…</div>
+</header>
+
+<main>
+
+<!-- ============ HEIM ============ -->
+<section id="heim" class="active">
+  <div class="card">
+    <p style="margin:0">Velkomin í Vindó! 🩷 Hér er allt á einum stað: dagskráin, reglurnar, hefðirnar, söngbókin þín, tónlist, gönguleiðir og neyðarnúmer. Það sem þú bætir við (lög, lagalistar, minnispunktar, gátlisti) vistast <b>í símanum þínum</b>.</p>
+  </div>
+  <div class="grid">
+    <button class="tile" data-go="dagskra"><div class="e">🕘</div><b>Dagskrá</b><span>Dæmigerður dagur</span></button>
+    <button class="tile" data-go="reglur"><div class="e">📋</div><b>Reglur</b><span>Siðareglur &amp; barnavernd</span></button>
+    <button class="tile" data-go="songbok"><div class="e">🎶</div><b>Söngbók</b><span>Þín Vindáshlíðarlög</span></button>
+    <button class="tile" data-go="tonlist"><div class="e">🎧</div><b>Tónlist</b><span>Spotify lagalistar</span></button>
+    <button class="tile" data-go="hefdir"><div class="e">✨</div><b>Hefðir &amp; leikir</b><span>Brennó, bænakonur…</span></button>
+    <button class="tile" data-go="stadur"><div class="e">🏔️</div><b>Staðurinn</b><span>Hús, saga, göngur</span></button>
+    <button class="tile" data-go="neyd"><div class="e">🚨</div><b>Neyð</b><span>112 &amp; viðbrögð</span></button>
+    <button class="tile" data-go="minn"><div class="e">📝</div><b>Mitt</b><span>Gátlisti &amp; minnispunktar</span></button>
+    <button class="tile" data-go="tenglar"><div class="e">🔗</div><b>Tenglar</b><span>KFUM og KFUK o.fl.</span></button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h3 style="margin-top:0">Í stuttu máli</h3>
+    <ul>
+      <li>Sumarbúðir KFUM og KFUK fyrir stelpur 8–16 ára, í Kjós, um 45 km frá Reykjavík.</li>
+      <li>Sumarbúðastarf fyrir stúlkur síðan <b>1947</b> (byrjaði í tjöldum).</li>
+      <li>Yfir 1.000 stelpur á hverju sumri, pláss fyrir um <b>82 í hverjum flokki</b>.</li>
+      <li>Framkvæmdastjóri: <b>Helga Sóley Björnsdóttir</b>.</li>
+      <li>Skrifstofa: Holtavegur 28, 104 Reykjavík · sími 588 8899.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ DAGSKRÁ ============ -->
+<section id="dagskra">
+  <h2>🕘 Dæmigerður dagur</h2>
+  <p class="muted">Byggt á lýsingu KFUM og KFUK á sumarbúðadeginum. Tímar án nákvæmrar heimildar eru merktir „u.þ.b.“ — forstöðukonan í hverjum flokki ræður endanlegri dagskrá. Línan sem er í gangi núna er bleik.</p>
+  <div class="card">
+    <table id="dayTable">
+      <thead><tr><th>Tími</th><th>Hvað</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <h3>Komudagur</h3>
+  <div class="card">
+    <ul>
+      <li>Stelpurnar koma um kl. 14:00, hitta starfsfólkið, farið yfir reglur staðarins og þeim skipt í herbergi.</li>
+      <li>Rölt um staðinn, kaffitími, brennó, föndur og íþróttakeppni (t.d. <i>hússhlaup</i>).</li>
+      <li><b>Brunaæfing</b> á fyrsta degi.</li>
+      <li>Hvert herbergi fær sína <b>bænakonu</b> — fundin í „bænakonuleit“ um kvöldið.</li>
+    </ul>
+  </div>
+
+  <h3>Brottfarardagur / veisludagur</h3>
+  <div class="card">
+    <p style="margin:0">Síðasti heili dagurinn er <b>veisludagur</b> með veislukvöldi, og brottför daginn eftir. Gott að hafa tilbúið: atriði, skreytingar og að aðstoða stelpurnar við að pakka og finna týnda hluti.</p>
+  </div>
+
+  <h3>Flokkar sumarið 2026 (til viðmiðunar)</h3>
+  <div class="card">
+    <table>
+      <tr><th>Flokkur</th><th>Dagar</th><th>Aldur</th></tr>
+      <tr><td>1. flokkur</td><td>11.–15. júní</td><td>9–11</td></tr>
+      <tr><td>2. Ævintýraflokkur I</td><td>16.–21. júní</td><td>11–13</td></tr>
+      <tr><td>3. flokkur</td><td>22.–26. júní</td><td>10–12</td></tr>
+      <tr><td>4. Ævintýraflokkur II</td><td>27. júní–2. júlí</td><td>11–13</td></tr>
+      <tr><td>5. Stubbaflokkur I</td><td>2.–4. júlí</td><td>8–9</td></tr>
+      <tr><td>…</td><td colspan="2">og fleiri, m.a. Listaflokkur (9.) og 13. flokkur í ágúst</td></tr>
+    </table>
+    <p class="muted small" style="margin-bottom:0">Flokkar 2027 birtast á <a href="https://sumarfjor.is/Event.aspx?id=3" target="_blank" rel="noopener">sumarfjor.is</a>.</p>
+  </div>
+
+  <h3>Tegundir flokka</h3>
+  <div class="card">
+    <ul>
+      <li><b>Hefðbundnir flokkar</b> (9–12 ára): útivera, brennó, íþróttakeppnir, herbergin skiptast á að vera með atriði á kvöldvöku.</li>
+      <li><b>Ævintýraflokkar</b> (10–14 ára): óvæntar uppákomur, hæfileikakeppni, þemadagar, bíókvöld og ævintýraleikir.</li>
+      <li><b>Unglingaflokkur</b> (13–16 ára): fimm dagar, dagskránni haldið leyndri.</li>
+      <li><b>Stubbaflokkar</b> (8–9 ára): þrír dagar, fyrsta kynning á sumarbúðalífi.</li>
+      <li>Utan sumars: jólaflokkar, páskaflokkur, mæðgnaflokkur, kvennaflokkur og skólabúðir (Dalama).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ REGLUR ============ -->
+<section id="reglur">
+  <h2>📋 Reglur og ábyrgð</h2>
+  <div class="note">Starfsfólk KFUM og KFUK fylgir <b>siðareglum Æskulýðsvettvangsins</b>, fer á barnaverndarnámskeið, fær fræðslu um þroska barna, skyndihjálp og brunavarnir og skilar inn sakavottorði.</div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Gullnu reglurnar í hnotskurn</h3>
+    <ul>
+      <li>💚 Velferð barnanna er alltaf í fyrsta sæti.</li>
+      <li>🚭 Engin neysla tóbaks, nikótíns, áfengis eða vímuefna í starfi.</li>
+      <li>👭 Forðastu að vera ein með einni stelpu — hafðu dyr opnar eða annan fullorðinn nálægt.</li>
+      <li>🤲 Virtu mörk og forðastu snertingu sem gæti misskilist.</li>
+      <li>📵 Engin einkasamskipti við þátttakendur á samfélagsmiðlum; samskipti þurfa að tengjast starfinu og fara um viðurkenndar leiðir.</li>
+      <li>📸 Myndir úr starfi má aldrei nota til einkanota — ekki birta myndir af stelpunum á eigin miðlum.</li>
+      <li>🛑 Einelti og ofbeldi, líka stafrænt, líðst ekki — gripið er inn í strax.</li>
+      <li>🤫 Trúnaður gildir — <b>nema</b> barn sé í hættu. Þá gilda barnaverndarlög og þú segir forstöðukonu frá.</li>
+      <li>⭐ Þú ert fyrirmynd, líka utan vinnutíma.</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Ef barn segir þér frá einhverju alvarlegu</h3>
+    <ol>
+      <li>Hlustaðu í rólegheitum, trúðu barninu og þakkaðu því fyrir að segja frá.</li>
+      <li>Ekki lofa að þegja — segðu að þú þurfir að fá hjálp frá þeim sem geta hjálpað.</li>
+      <li>Ekki spyrja leiðandi spurninga eða „rannsaka“ málið sjálf.</li>
+      <li>Láttu forstöðukonu vita strax. Í bráðri hættu: <a href="tel:112">112</a> (tilkynningar til barnaverndar fara líka í gegnum 112).</li>
+      <li>Skrifaðu hjá þér það sem barnið sagði, með þess eigin orðum, og hvenær.</li>
+    </ol>
+  </div>
+
+  <details class="card">
+    <summary><b>Siðareglur Æskulýðsvettvangsins — samskipti (20 atriði)</b></summary>
+    <ol>
+      <li>Þau sem vinna með börnum skulu vera hæf til þess.</li>
+      <li>Velferð barna og það sem þeim er fyrir bestu að leiðarljósi.</li>
+      <li>Starfið skal vera heilbrigt, uppbyggjandi, vandað og öruggt.</li>
+      <li>Starfsfólk er fyrirmynd, í starfi og utan þess.</li>
+      <li>Tóbak, nikótín, áfengi og vímuefni óheimil í starfi.</li>
+      <li>Góð samskipti við samstarfsfólk og forsjáraðila.</li>
+      <li>Vandvirkni, heiðarleiki, umhyggja og virðing.</li>
+      <li>Engin mismunun (uppruni, kyn, trú, fötlun, efnahagur o.fl.).</li>
+      <li>Trúnaður — nema barn búi við slæmar aðstæður eða sé í hættu.</li>
+      <li>Aldrei stefna heilsu og öryggi í hættu.</li>
+      <li>Einelti og ofbeldi af öllu tagi líðst ekki.</li>
+      <li>Virða mörk; forðast snertingu sem gæti misskilist.</li>
+      <li>Fagleg fjarlægð utan viðburða.</li>
+      <li>Ábyrg rafræn samskipti; tengd starfinu og með vitund forsjáraðila.</li>
+      <li>Vera meðvituð um valdamun.</li>
+      <li>Aldrei misnota stöðu sína.</li>
+      <li>Kynferðislegt daður eða tal við þátttakendur undir 18 ára algjörlega bannað.</li>
+      <li>Forðast slíkt líka gagnvart fullorðnum þar sem valdastaða er til staðar.</li>
+      <li>Forðast að vera ein með þátttakanda.</li>
+      <li>Myndir virði friðhelgi; aldrei til einkanota.</li>
+    </ol>
+    <p class="muted small">Brot á reglunum getur leitt til brottvísunar úr starfi. <a href="https://skatarnir.is/wp-content/uploads/sidareglur-AEV-2023.pdf" target="_blank" rel="noopener">Sjá reglurnar í heild (PDF)</a></p>
+  </details>
+
+  <div class="card">
+    <h3 style="margin-top:0">Hvert á að leita?</h3>
+    <ul>
+      <li>Fyrst: <b>forstöðukonan</b> í flokknum.</li>
+      <li>Framkvæmdastjóri Vindáshlíðar: Helga Sóley Björnsdóttir (sími skráður á vef: <a href="tel:8467010">846 7010</a>).</li>
+      <li>Óæskileg hegðun / áreitni: <a href="https://www.samskiptaradgjafi.is" target="_blank" rel="noopener">Samskiptaráðgjafi íþrótta- og æskulýðsstarfs</a> — óháður aðili, líka fyrir starfsfólk.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ SÖNGBÓK ============ -->
+<section id="songbok">
+  <h2>🎶 Söngbókin mín</h2>
+  <div class="note">Opinber söngbók Vindáshlíðar er ekki birt á netinu (textarnir eru höfundarréttarvarðir). Þú færð söngbókina á staðnum eða á starfsmannanámskeiðinu — skráðu svo lögin hér sem þú þarft að kunna. Þau vistast í símanum þínum og þú getur deilt þeim með hinum foringjunum.</div>
+
+  <input id="search" placeholder="🔎 Leita í lögum…">
+  <div class="card" id="songList"><p class="muted">Engin lög komin enn. Bættu við fyrsta laginu hér fyrir neðan 👇</p></div>
+
+  <details class="card" id="addSongBox">
+    <summary><b>➕ Bæta við lagi</b></summary>
+    <input id="sTitle" placeholder="Heiti lags">
+    <select id="sCat">
+      <option>Vindáshlíðarlög</option>
+      <option>Kvöldvaka / fjör</option>
+      <option>Biblíulestur / morgunstund</option>
+      <option>Kirkja / bænastund</option>
+      <option>Hreyfisöngvar</option>
+      <option>Veislukvöld</option>
+      <option>Annað</option>
+    </select>
+    <input id="sChords" placeholder="Hljómar / tónn (valfrjálst, t.d. G – C – D)">
+    <textarea id="sText" placeholder="Texti (úr söngbókinni)"></textarea>
+    <input id="sLink" placeholder="Tengill á upptöku (Spotify/YouTube, valfrjálst)">
+    <div class="row"><button class="btn" id="saveSong">Vista lag</button><button class="btn alt" id="cancelEdit" style="display:none">Hætta við</button></div>
+  </details>
+
+  <details class="card">
+    <summary><b>⇄ Deila söngbókinni með öðrum foringjum</b></summary>
+    <p class="muted">Afritaðu kóðann og sendu hann. Hinar líma hann inn og ýta á „Flytja inn“.</p>
+    <div class="row"><button class="btn alt sm" id="exportSongs">Afrita söngbók</button><button class="btn alt sm" id="importSongs">Flytja inn</button></div>
+    <textarea id="songJson" placeholder="Kóði birtist hér / límdu kóða hér"></textarea>
+  </details>
+</section>
+
+<!-- ============ TÓNLIST ============ -->
+<section id="tonlist">
+  <h2>🎧 Tónlist og lagalistar</h2>
+  <div class="note">Ég fann engan opinberan, samþykktan Spotify-lagalista frá Vindáshlíð. Spurðu forstöðukonuna eða framkvæmdastjóra hvort það sé til samþykktur listi fyrir dans, kvöldvökur og veislukvöld — og límdu tengilinn hér. Mundu: tónlist í starfi með börnum á að vera við hæfi (engir grófir textar).</div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Bæta við lagalista</h3>
+    <input id="pName" placeholder="Heiti (t.d. Veislukvöld, Dansleikir, Róleg stund)">
+    <input id="pUrl" placeholder="Spotify tengill (open.spotify.com/playlist/…)">
+    <label class="row small" style="gap:6px"><input type="checkbox" id="pApproved" style="width:auto;margin:0"> Samþykktur af forstöðukonu/framkvæmdastjóra</label>
+    <button class="btn" id="addPl" style="margin-top:8px">Vista lagalista</button>
+  </div>
+  <div id="plList"></div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Leita á Spotify</h3>
+    <div class="row">
+      <a class="btn alt sm" target="_blank" rel="noopener" href="https://open.spotify.com/search/Vind%C3%A1shl%C3%AD%C3%B0">„Vindáshlíð“</a>
+      <a class="btn alt sm" target="_blank" rel="noopener" href="https://open.spotify.com/search/KFUM%20og%20KFUK">„KFUM og KFUK“</a>
+      <a class="btn alt sm" target="_blank" rel="noopener" href="https://open.spotify.com/search/sunnudagaskólalög">Sunnudagaskólalög</a>
+      <a class="btn alt sm" target="_blank" rel="noopener" href="https://open.spotify.com/search/íslensk%20barnalög">Íslensk barnalög</a>
+    </div>
+    <p class="muted small">Ábending: sæktu lagalista sem „Download“ í Spotify — farsímasamband getur verið stopult í Kjósinni.</p>
+  </div>
+</section>
+
+<!-- ============ HEFÐIR ============ -->
+<section id="hefdir">
+  <h2>✨ Hefðir og leikir</h2>
+  <div class="card">
+    <h3 style="margin-top:0">Vindó-hefðir</h3>
+    <ul>
+      <li><b>Bænakonan</b> — hvert herbergi á sína bænakonu sem er með stelpunum á kvöldin, svæfir þær og fer með kvöldbæn. Fyrsta kvöldið er <i>bænakonuleit</i>: foringjarnir fela sig og herbergin leita að sinni.</li>
+      <li><b>Fánahylling</b> á hverjum morgni.</li>
+      <li><b>Biblíulestur</b> daglega — forstöðukonan leiðir.</li>
+      <li><b>Brennó</b> — brennókeppni milli herbergja, sívinsæl. Sérstök brennóforingi heldur utan um mótið.</li>
+      <li><b>Vinabandagerð / armbandagerð</b> í setustofunni.</li>
+      <li><b>Tannburstun í læknum</b> eftir kvöldvöku — gömul og vinsæl hefð.</li>
+      <li><b>Kvöldvaka</b> — herbergin sýna atriði og allir syngja Vindáshlíðarlögin.</li>
+      <li><b>Hugleiðing</b> í setustofunni á kvöldin: saga með jákvæðum boðskap og spjall.</li>
+      <li><b>Náttfatapartý</b> — foringjarnir mæta óvænt í náttfötum með „HÆ HÓ JIBBÍ JEI, ÞAÐ ER KOMIÐ NÁTTFATAPARTÝ!“ Dans, dansleikir og ís.</li>
+      <li><b>Þemadagar</b> — t.d. sjóræningjadagur (vakning með sjóræningjum, leikþættir í matartímum) og sirkusdagur.</li>
+      <li><b>Veisludagur</b> síðasta daginn, með veislukvöldi.</li>
+      <li>Opnunarkaffi og guðsþjónusta í kirkjunni markar upphaf sumarsins (síðan 1976).</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Leikir sem hafa verið notaðir</h3>
+    <ul>
+      <li><b>Hússhlaup</b> — hlaupa/ganga hring um húsið eins hratt og hægt er.</li>
+      <li><b>Amazing race</b> á kvöldvöku — hlaupið um svæðið, spurningum svarað og foringjar fundnir til að leysa þrautir.</li>
+      <li><b>Flóttinn undan sjóræningjunum</b> — ekki láta sjóræningjana ná sér og setja í fangelsi.</li>
+      <li>Skógarleikir, ratleikur, réttarleikur og dansleikir.</li>
+    </ul>
+    <p class="muted small">Bættu við þínum eigin leikjahugmyndum undir „Mitt“.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Hlutverk starfsfólks</h3>
+    <ul>
+      <li><b>Forstöðukona</b> — stýrir flokknum, biblíulestri og lýkur hugleiðingu.</li>
+      <li><b>Bænakona</b> — ein á hvert herbergi.</li>
+      <li><b>Brennóforingi</b> og <b>íþróttaforingi</b> (2–4 keppnir á dag).</li>
+      <li>Aðrir <b>foringjar</b> sem eru alltaf til taks.</li>
+      <li><b>Ráðskona</b>, aðstoð í eldhúsi og <b>bakari</b>.</li>
+      <li><b>Aðstoðarforingjar</b> — oft fyrrverandi Vindóstelpur (frá um 14 ára aldri).</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ STAÐURINN ============ -->
+<section id="stadur">
+  <h2>🏔️ Staðurinn</h2>
+  <div class="card">
+    <h3 style="margin-top:0">Húsin</h3>
+    <ul>
+      <li><b>Aðalskálinn</b> (1951, tvær hæðir) — eldhús, matsalur, setustofa, þrjú 6 manna herbergi; uppi sex 2 manna herbergi.</li>
+      <li><b>Viðbyggingin</b> (2003, 540 m²) — tómstundasalur, tvö svefnherbergi, þvottahús; uppi átta 8 manna herbergi og eitt 2 manna.</li>
+      <li><b>Íþróttahúsið</b> (1978) — salur með körfum; í anddyri fótboltaspil, borðtennis og þythokkí.</li>
+      <li><b>Hallgrímskirkja í Vindáshlíð</b> — reist í Saurbæ á Hvalfjarðarströnd 1878, flutt í Vindáshlíð 1957, endurvígð 1959 og friðuð. Stendur á hæsta punkti flatarinnar.</li>
+    </ul>
+    <h3>Úti</h3>
+    <p style="margin:0">Aparóla og apabrú, þriggja holu frisbígolfvöllur, lækur, fótboltavöllur, rólur, kassabílar og skógarstígar í birkikjarri.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">🥾 Gönguferðir</h3>
+    <ul>
+      <li><b>Pokafoss</b> — í gljúfri neðan við staðinn; foringjarnir segja sögur af fossinum.</li>
+      <li><b>Selárfoss (Brúðarslæða)</b>.</li>
+      <li><b>Sandfell</b> — fjallganga.</li>
+    </ul>
+    <p class="muted small">Talið alltaf hópinn fyrir og eftir göngu, hafið síma, sjúkrapúða og vatn með, og a.m.k. einn foringja fremst og einn aftast.</p>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Saga</h3>
+    <ul>
+      <li>KFUK stofnað 29. apríl 1899.</li>
+      <li>1947: sumarstarf KFUK hefst í Vindáshlíð — í tjöldum.</li>
+      <li>1949: fyrsti skálinn.</li>
+      <li>1957: kirkjan flutt frá Saurbæ.</li>
+      <li>Vindáshlíð hefur frá upphafi verið rekin og stýrt af konum.</li>
+    </ul>
+    <a class="btn alt sm" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=Vind%C3%A1shl%C3%AD%C3%B0%20Kj%C3%B3s">📍 Opna í kortum</a>
+  </div>
+</section>
+
+<!-- ============ NEYÐ ============ -->
+<section id="neyd">
+  <h2>🚨 Neyðarupplýsingar</h2>
+  <div class="card emerg">
+    <a class="big" href="tel:112">📞 112 — Neyðarlínan</a>
+    <a class="big" href="tel:5432222">☠️ 543 2222 — Eitrunarmiðstöð</a>
+    <a class="big" href="tel:1700">🩺 1700 — Læknavaktin / Heilsuvera</a>
+    <a class="big" href="tel:5888899">🏠 588 8899 — KFUM og KFUK</a>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Fyrstu viðbrögð</h3>
+    <ol>
+      <li>Tryggðu öryggi — þitt og barnanna.</li>
+      <li>Kallaðu á forstöðukonu / annan foringja.</li>
+      <li>Hringdu í 112 ef þörf er á. Segðu: <b>„Vindáshlíð í Kjós“</b>, hvað gerðist, fjöldi og ástand.</li>
+      <li>Veittu skyndihjálp þar til hjálp berst.</li>
+      <li>Skráðu atvikið eftir á.</li>
+    </ol>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">🔥 Bruni</h3>
+    <p style="margin:0">Brunaæfing er haldin í hverjum flokki. Lærðu strax: hvar slökkvitæki og eldvarnarteppi eru, flóttaleiðir úr þínu herbergi og hvar söfnunarstaðurinn er. Teldu herbergið þitt á söfnunarstað.</p>
+    <input id="fireSpot" placeholder="Söfnunarstaður (skrifaðu hér)" style="margin-top:8px">
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Mikilvæg símanúmer (fylltu inn)</h3>
+    <input id="numForst" placeholder="Forstöðukona – nafn og sími">
+    <input id="numOther" placeholder="Önnur númer (ráðskona, aðrir foringjar…)">
+  </div>
+</section>
+
+<!-- ============ MITT ============ -->
+<section id="minn">
+  <h2>📝 Mitt</h2>
+  <div class="card check" id="packList">
+    <h3 style="margin-top:0">Gátlisti fyrir mig (tillögur)</h3>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Bæta á gátlistann</h3>
+    <div class="row"><input id="newItem" placeholder="Nýtt atriði" style="flex:1"><button class="btn sm" id="addItem">Bæta við</button></div>
+  </div>
+  <div class="card">
+    <h3 style="margin-top:0">Minnispunktar</h3>
+    <p class="muted small">Nöfn stelpnanna í herberginu, hugmyndir að atriðum, leikir, hugleiðingar…</p>
+    <textarea id="notes" style="min-height:200px"></textarea>
+    <p class="muted small" id="savedMsg"></p>
+  </div>
+</section>
+
+<!-- ============ TENGLAR ============ -->
+<section id="tenglar">
+  <h2>🔗 Tenglar</h2>
+  <div class="card">
+    <ul>
+      <li><a href="https://kfum.is/vindashlid/" target="_blank" rel="noopener">Vindáshlíð á kfum.is</a></li>
+      <li><a href="https://kfum.is/vindashlid/um-vindashlid/" target="_blank" rel="noopener">Um Vindáshlíð</a></li>
+      <li><a href="https://kfum.is/vindashlid/sumarbudir/" target="_blank" rel="noopener">Sumarbúðirnar og dagskráin</a></li>
+      <li><a href="https://kfum.is/vindashlid/fyrir-forsjaradila/" target="_blank" rel="noopener">Fyrir forsjáraðila (gott að vita hvað foreldrar fá)</a></li>
+      <li><a href="https://sumarfjor.is/Event.aspx?id=3" target="_blank" rel="noopener">Flokkar og skráning – sumarfjor.is</a></li>
+      <li><a href="https://kfum.is/log-kfum-og-kfuk/" target="_blank" rel="noopener">Lög KFUM og KFUK (líka lög Vindáshlíðar)</a></li>
+      <li>Handbók sumarbúðanna: kfum.is/handbok</li>
+      <li>Netnámskeið starfsfólks (Náman): kfum.is/naman</li>
+      <li><a href="https://www.samskiptaradgjafi.is" target="_blank" rel="noopener">Samskiptaráðgjafi</a></li>
+      <li><a href="https://www.instagram.com/vindashlid/" target="_blank" rel="noopener">Instagram @vindashlid</a></li>
+      <li><a href="https://www.facebook.com/vindashlid.kfuk" target="_blank" rel="noopener">Facebook – Vindáshlíð</a></li>
+      <li><a href="https://www.flickr.com/photos/kfum-kfuk-island/collections/72157629303373157/" target="_blank" rel="noopener">Myndasafn á Flickr</a></li>
+      <li><a href="https://is.wikipedia.org/wiki/Vind%C3%A1shl%C3%AD%C3%B0" target="_blank" rel="noopener">Vindáshlíð á Wikipedia</a></li>
+    </ul>
+  </div>
+  <p class="muted small">Upplýsingar teknar saman í nóvember 2026 af vef KFUM og KFUK og fleiri opinberum heimildum. Það sem forstöðukona og framkvæmdastjóri segja gildir alltaf framar.</p>
+</section>
+
+</main>
+
+<nav id="nav">
+  <button data-go="heim" class="on"><span class="i">🏠</span>Heim</button>
+  <button data-go="dagskra"><span class="i">🕘</span>Dagskrá</button>
+  <button data-go="reglur"><span class="i">📋</span>Reglur</button>
+  <button data-go="songbok"><span class="i">🎶</span>Söngbók</button>
+  <button data-go="tonlist"><span class="i">🎧</span>Tónlist</button>
+  <button data-go="hefdir"><span class="i">✨</span>Hefðir</button>
+  <button data-go="stadur"><span class="i">🏔️</span>Staður</button>
+  <button data-go="neyd"><span class="i">🚨</span>Neyð</button>
+  <button data-go="minn"><span class="i">📝</span>Mitt</button>
+  <button data-go="tenglar"><span class="i">🔗</span>Tenglar</button>
+</nav>
+
+<script>
+// ---------- geymsla ----------
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('vindo_'+k); return v===null? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('vindo_'+k, JSON.stringify(v)); }catch(e){} }
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+// ---------- leiðsögn ----------
+function go(id){
+  document.querySelectorAll('section').forEach(s=>s.classList.toggle('active', s.id===id));
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on', b.dataset.go===id));
+  window.scrollTo(0,0);
+  history.replaceState(null,'','#'+id);
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
+if(location.hash && document.getElementById(location.hash.slice(1))) go(location.hash.slice(1));
+
+// ---------- dagskrá ----------
+const day = [
+  ["09:00","Vakning 🌞"],
+  ["09:30","Morgunmatur (u.þ.b.)"],
+  ["10:15","Fánahylling (u.þ.b.)"],
+  ["10:30","Biblíulestur (u.þ.b.)"],
+  ["11:15","Frjáls tími: brennó, íþróttakeppnir, föndur, vinabönd (u.þ.b.)"],
+  ["12:30","Hádegismatur (u.þ.b.)"],
+  ["14:00","Útivera — göngur, leikir, aparóla"],
+  ["15:30","Kaffi ☕🍰"],
+  ["16:00","Frjáls tími / brennó / keppnir"],
+  ["18:30","Kvöldmatur"],
+  ["20:00","Kvöldvaka 🎭 (u.þ.b.)"],
+  ["21:00","Kvöldkaffi og hugleiðing (u.þ.b.)"],
+  ["21:30","Háttatími — bænakonan með herberginu 🙏"],
+  ["22:30","Ljós slökkt 🌙"]
+];
+function mins(t){ const [h,m]=t.split(':').map(Number); return h*60+m; }
+function renderDay(){
+  const now = new Date(); const n = now.getHours()*60+now.getMinutes();
+  let cur = -1; day.forEach((d,i)=>{ if(mins(d[0])<=n) cur=i; });
+  if(n < mins(day[0][0])) cur = -1;
+  $('#dayTable tbody').innerHTML = day.map((d,i)=>`<tr class="${i===cur?'cur':''}"><td class="t">${d[0]}</td><td>${esc(d[1])}</td></tr>`).join('');
+  const hhmm = now.toLocaleTimeString('is-IS',{hour:'2-digit',minute:'2-digit',hour12:false});
+  let txt;
+  if(cur===-1) txt = `Klukkan er <b>${hhmm}</b> — næst: vakning kl. 09:00.`;
+  else if(cur===day.length-1) txt = `Klukkan er <b>${hhmm}</b> — ró í húsinu. Góða nótt 🌙`;
+  else txt = `Klukkan er <b>${hhmm}</b> — núna: ${esc(day[cur][1].replace(' (u.þ.b.)',''))}. Næst kl. ${day[cur+1][0]}: ${esc(day[cur+1][1].replace(' (u.þ.b.)',''))}.`;
+  $('#now').innerHTML = txt + '<br><span class="small" style="opacity:.75">Dæmigerður dagur — dagskrá flokksins getur verið önnur.</span>';
+}
+renderDay(); setInterval(renderDay, 30000);
+
+// ---------- söngbók ----------
+let songs = store.get('songs', []);
+let editId = null;
+function renderSongs(){
+  const q = ($('#search').value||'').toLowerCase();
+  const list = songs.filter(s => !q || (s.title+' '+s.text+' '+s.cat).toLowerCase().includes(q))
+                    .sort((a,b)=> a.cat.localeCompare(b.cat,'is') || a.title.localeCompare(b.title,'is'));
+  if(!songs.length){ $('#songList').innerHTML = '<p class="muted" style="margin:0">Engin lög komin enn. Bættu við fyrsta laginu hér fyrir neðan 👇</p>'; return; }
+  if(!list.length){ $('#songList').innerHTML = '<p class="muted" style="margin:0">Ekkert fannst.</p>'; return; }
+  $('#songList').innerHTML = list.map(s=>`
+    <div class="song" data-id="${s.id}">
+      <h4><span>${esc(s.title)}</span><span class="pill">${esc(s.cat)}</span></h4>
+      ${s.chords?`<div class="muted small">🎸 ${esc(s.chords)}</div>`:''}
+      <pre>${esc(s.text)}${s.link?`\n\n🔗 <a href="${esc(s.link)}" target="_blank" rel="noopener">Hlusta</a>`:''}</pre>
+      <div class="row" style="margin-top:6px"><button class="btn alt sm" data-edit="${s.id}">Breyta</button><button class="btn alt sm" data-del="${s.id}">Eyða</button></div>
+    </div>`).join('');
+}
+$('#songList').addEventListener('click', e=>{
+  const h = e.target.closest('h4'); if(h){ h.parentElement.classList.toggle('open'); return; }
+  const ed = e.target.dataset.edit, del = e.target.dataset.del;
+  if(ed){ const s = songs.find(x=>x.id===ed); editId=ed;
+    $('#sTitle').value=s.title; $('#sCat').value=s.cat; $('#sChords').value=s.chords||''; $('#sText').value=s.text; $('#sLink').value=s.link||'';
+    $('#addSongBox').open=true; $('#cancelEdit').style.display=''; $('#addSongBox').scrollIntoView({behavior:'smooth'}); }
+  if(del && confirm('Eyða þessu lagi?')){ songs = songs.filter(x=>x.id!==del); store.set('songs',songs); renderSongs(); }
+});
+function clearSongForm(){ ['#sTitle','#sChords','#sText','#sLink'].forEach(s=>$(s).value=''); editId=null; $('#cancelEdit').style.display='none'; }
+$('#saveSong').addEventListener('click', ()=>{
+  const s = { id: editId || Date.now().toString(36), title: $('#sTitle').value.trim(), cat: $('#sCat').value,
+              chords: $('#sChords').value.trim(), text: $('#sText').value, link: $('#sLink').value.trim() };
+  if(!s.title){ alert('Vantar heiti á lagið'); return; }
+  songs = songs.filter(x=>x.id!==s.id); songs.push(s); store.set('songs',songs); clearSongForm(); renderSongs();
+});
+$('#cancelEdit').addEventListener('click', clearSongForm);
+$('#search').addEventListener('input', renderSongs);
+$('#exportSongs').addEventListener('click', ()=>{
+  const code = JSON.stringify(songs); $('#songJson').value = code;
+  if(navigator.clipboard) navigator.clipboard.writeText(code).then(()=>alert('Söngbókin afrituð — límdu hana í skilaboð.'),()=>{});
+});
+$('#importSongs').addEventListener('click', ()=>{
+  try{ const inc = JSON.parse($('#songJson').value); if(!Array.isArray(inc)) throw 0;
+    let added=0; inc.forEach(s=>{ if(s && s.title && !songs.some(x=>x.title===s.title)){ songs.push({id:s.id||Date.now().toString(36)+added, title:s.title, cat:s.cat||'Annað', chords:s.chords||'', text:s.text||'', link:s.link||''}); added++; } });
+    store.set('songs',songs); renderSongs(); alert(added+' lög flutt inn.');
+  }catch(e){ alert('Kóðinn er ekki á réttu formi.'); }
+});
+renderSongs();
+
+// ---------- lagalistar ----------
+let pls = store.get('playlists', []);
+function embedUrl(u){
+  const m = String(u).match(/open\.spotify\.com\/(?:intl-[a-z]+\/)?(playlist|album|track|artist)\/([A-Za-z0-9]+)/);
+  return m ? `https://open.spotify.com/embed/${m[1]}/${m[2]}` : null;
+}
+function renderPls(){
+  $('#plList').innerHTML = pls.map((p,i)=>{
+    const em = embedUrl(p.url);
+    return `<div class="card">
+      <div class="row" style="justify-content:space-between"><b>${esc(p.name||'Lagalisti')}</b>
+      <span class="pill ${p.approved?'':'pink'}">${p.approved?'✅ Samþykktur':'⏳ Ekki staðfestur'}</span></div>
+      ${em?`<iframe src="${em}" height="352" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`:`<p><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.url)}</a></p>`}
+      <div class="row" style="margin-top:6px"><a class="btn alt sm" href="${esc(p.url)}" target="_blank" rel="noopener">Opna í Spotify</a><button class="btn alt sm" data-tog="${i}">${p.approved?'Merkja óstaðfestan':'Merkja samþykktan'}</button><button class="btn alt sm" data-rm="${i}">Eyða</button></div>
+    </div>`;}).join('');
+}
+$('#plList').addEventListener('click', e=>{
+  if(e.target.dataset.rm!==undefined && confirm('Eyða lagalista?')){ pls.splice(+e.target.dataset.rm,1); store.set('playlists',pls); renderPls(); }
+  if(e.target.dataset.tog!==undefined){ const p=pls[+e.target.dataset.tog]; p.approved=!p.approved; store.set('playlists',pls); renderPls(); }
+});
+$('#addPl').addEventListener('click', ()=>{
+  const url = $('#pUrl').value.trim(); if(!url){ alert('Vantar tengil'); return; }
+  pls.push({name:$('#pName').value.trim(), url, approved:$('#pApproved').checked});
+  store.set('playlists',pls); $('#pName').value=''; $('#pUrl').value=''; $('#pApproved').checked=false; renderPls();
+});
+renderPls();
+
+// ---------- gátlisti ----------
+const defaults = [
+  "Sakavottorð skilað","Barnaverndarnámskeið klárað","Skyndihjálparnámskeið / upprifjun","Netnámskeið í Námunni",
+  "Lesa handbók sumarbúðanna","Fá söngbókina og læra helstu Vindáshlíðarlögin",
+  "Hlý föt, ullarpeysa, regnföt og góðir skór","Inniskór","Náttföt fyrir náttfatapartý 😄","Búningadót fyrir þemadaga og leikþætti",
+  "Höfuðljós / vasaljós","Vatnsbrúsi","Hleðslutæki og hleðslubanki","Biblía / hugleiðingarefni",
+  "Föndurhugmyndir og vinabandaþráður","Hugmyndir að kvöldvökuatriðum","Eigin lyf og sjúkraplástrar"
+];
+let items = store.get('items', null) || defaults.map(t=>({t, d:false}));
+function renderItems(){
+  $('#packList').innerHTML = '<h3 style="margin-top:0">Gátlisti fyrir mig (tillögur)</h3>' +
+    items.map((it,i)=>`<label><input type="checkbox" data-i="${i}" ${it.d?'checked':''}><span style="flex:1;${it.d?'text-decoration:line-through;color:#8a958e':''}">${esc(it.t)}</span><button class="btn alt sm" data-x="${i}" type="button">✕</button></label>`).join('');
+}
+$('#packList').addEventListener('click', e=>{
+  if(e.target.dataset.x!==undefined){ e.preventDefault(); items.splice(+e.target.dataset.x,1); store.set('items',items); renderItems(); }
+});
+$('#packList').addEventListener('change', e=>{
+  if(e.target.dataset.i!==undefined){ items[+e.target.dataset.i].d = e.target.checked; store.set('items',items); renderItems(); }
+});
+$('#addItem').addEventListener('click', ()=>{ const t=$('#newItem').value.trim(); if(t){ items.push({t,d:false}); store.set('items',items); $('#newItem').value=''; renderItems(); } });
+renderItems();
+
+// ---------- textareitir sem vistast ----------
+['notes','fireSpot','numForst','numOther'].forEach(id=>{
+  const el = document.getElementById(id); el.value = store.get(id,'');
+  el.addEventListener('input', ()=>{ store.set(id, el.value); if(id==='notes') $('#savedMsg').textContent='Vistað ✓'; });
+});
+</script>
+</body>
+</html>
