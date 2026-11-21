@@ -74,6 +74,15 @@ select{font:16px Figtree,sans-serif;min-height:44px;padding:0 12px;border-radius
 .small{font-size:13px;color:var(--muted)}
 footer{border-top:1px solid var(--line);margin-top:32px;padding-top:12px}
 footer li{margin:2px 0}
+.filters{display:flex;flex-direction:column;gap:6px;margin:4px 0 12px}
+.frow{display:flex;flex-wrap:wrap;gap:6px}
+.fchip{font:600 14px Figtree,sans-serif;min-height:38px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer}
+.fchip.on{background:var(--sea);border-color:var(--sea);color:#fff}
+.fchip.st.on{background:#f5b324;border-color:#f5b324;color:#1d1205}
+.stars{display:flex;gap:0;margin:4px 0 0 -6px}
+.stars button{background:none;border:0;padding:0;width:38px;height:38px;font-size:26px;line-height:1;color:light-dark(#c9d5db,#33464f);cursor:pointer}
+.stars button.on{color:#f5b324}
+.empty{color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:14px;padding:14px;margin:0}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
 </style>
 </head>
@@ -92,6 +101,7 @@ footer li{margin:2px 0}
       <p class="tagline" id="dArea"></p>
       <div id="dNotes"></div>
       <h3 id="picksTitle"></h3>
+      <div class="filters" id="fPicks"></div>
       <ol class="list" id="picks"></ol>
       <div class="row">
         <button type="button" class="btn" id="moreBtn"></button>
@@ -109,8 +119,9 @@ footer li{margin:2px 0}
   <div class="hotels" id="hotels"></div>
 
   <h3 id="allH"></h3>
+  <div class="filters" id="fAll"></div>
   <div class="row">
-    <select id="catSel"></select>
+    <select id="sortSel"></select>
   </div>
   <ol class="list" id="all"></ol>
 
@@ -128,14 +139,14 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const map=q=>'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
 /* ---------- Icelandic translations ---------- */
 const UI={
-is:{title:'Villamartín, 23. nóv. – 3. des.',sub:'Matur, markaðir, gamlir bæir og menning á bíl, með hótelhelgi í Valencia.',days:'Dagar ferðarinnar',top10:'10 bestu tillögurnar',allSug:'Allar tillögur ({n})',showAll:'Sýna allar {n} tillögur',showTop:'Sýna bara 10 bestu',addLbl:'Bæta afþreyingu við þennan dag',add:'Bæta við',hotels:'Hótel um helgina (undir €120 nóttin)',allAct:'Öll afþreying',allTypes:'Allar tegundir',filter:'Sía eftir tegund',
+is:{title:'Villamartín, 23. nóv. – 3. des.',sub:'Matur, markaðir, gamlir bæir og menning á bíl, með hótelhelgi í Valencia.',days:'Dagar ferðarinnar',top10:'10 bestu tillögurnar',allSug:'Allar tillögur ({n})',showAll:'Sýna allar {n} tillögur',showTop:'Sýna bara 10 bestu',addLbl:'Bæta afþreyingu við þennan dag',add:'Bæta við',hotels:'Hótel um helgina (undir €120 nóttin)',allAct:'Öll afþreying',allTypes:'Allar tegundir',filter:'Sía eftir tegund',starF:'Sía eftir stjörnum',allStars:'Allar stjörnur',rated:'★ Metið',unrated:'Ómetið',five:'★5',rate:'Gefa {n} af 5 stjörnum',none:'Ekkert passar við síuna. Breyttu síunni hér fyrir ofan.',sort:'Röðun',sortDist:'Raða eftir akstri',sortStars:'Raða eftir stjörnum',
  foot:'Veðurspá: AccuWeather frá 20. nóv. fyrir 23.–29. nóv. Þegar síðan er tengd netinu uppfærast allir dagar frá Open-Meteo. Aksturstímar eru gróft mat frá Villamartín. Opnunartímar breytast, svo kíktu á hlekkinn áður en þú ferð. Það sem þú bætir við vistast bara í þessum síma.',sources:'Heimildir:',
  hotelNight:'<b>Hótelnótt í {c}.</b> Sjá hótelin hér fyrir neðan.',rainLikely:'<b>Líkur á rigningu ({p}%).</b> Afþreying innandyra er ofar á listanum í dag.',
  inPlan:'Í planinu',added:'Þú bættir við',indoor:'Innandyra / í lagi í rigningu',open:'Opið',closed:'Ekki opið þennan vikudag',website:'Vefsíða',map:'Kort',info:'Upplýsingar',dir:'Leiðarlýsing',remove:'Fjarlægja',check:'Skoða verð',
  noWx:'Engin spá fyrir {d} enn. Hún birtist þegar dagurinn er kominn inn í spátímabilið og síðan er tengd netinu.',rain:'Líkur á rigningu',wind:'Mesti vindur',live:'Lifandi spá frá Open-Meteo fyrir Villamartín.',snap:'AccuWeather-spá frá 20. nóv.',snapV:' Sýnd fyrir Valencia.',
  toGo:'{n} dagar í ferð',toGo1:'1 dagur í ferð',there:'Þið eruð komin. Góða skemmtun!',over:'Ferðinni er lokið',whyT:'Af hverju Valencia þessa helgi',
  why:'Á lau. 28. eru minni líkur á rigningu í Valencia (56%) en í Granada (65%, um 10 mm). Mercado Central er opinn á laugardegi og sunnudagurinn lítur út fyrir sól við Albufera. Aksturinn er 2 klst. í stað 3,5.',min:'mín.',lang:'EN'},
-en:{title:'Villamartín, 23 Nov – 3 Dec',sub:'Food, markets, old towns and culture by car, with a hotel weekend in Valencia.',days:'Trip days',top10:'Top 10 picks',allSug:'All suggestions ({n})',showAll:'Show all {n} suggestions',showTop:'Show top 10 only',addLbl:'Add an activity to this day',add:'Add',hotels:'Weekend hotels (under €120 a night)',allAct:'All activities',allTypes:'All types',filter:'Filter by type',
+en:{title:'Villamartín, 23 Nov – 3 Dec',sub:'Food, markets, old towns and culture by car, with a hotel weekend in Valencia.',days:'Trip days',top10:'Top 10 picks',allSug:'All suggestions ({n})',showAll:'Show all {n} suggestions',showTop:'Show top 10 only',addLbl:'Add an activity to this day',add:'Add',hotels:'Weekend hotels (under €120 a night)',allAct:'All activities',allTypes:'All types',filter:'Filter by type',starF:'Filter by stars',allStars:'All stars',rated:'★ Rated',unrated:'Unrated',five:'★5',rate:'Give {n} of 5 stars',none:'Nothing matches the filter. Change it above.',sort:'Sort',sortDist:'Sort by drive time',sortStars:'Sort by stars',
  foot:'Forecast: AccuWeather snapshot from 20 Nov for 23–29 Nov. When the page has internet it refreshes all days from Open-Meteo. Drive times are rough estimates from Villamartín. Opening hours change, so check the link before you go. Your added activities are saved on this phone only.',sources:'Sources:',
  hotelNight:'<b>Hotel night in {c}.</b> See the weekend hotels below.',rainLikely:'<b>Rain likely ({p}%).</b> Indoor options are ranked higher today.',
  inPlan:'In the plan',added:'Added by you',indoor:'Indoors / rain-OK',open:'Open',closed:'Not on this weekday',website:'Website',map:'Map',info:'Info',dir:'Directions',remove:'Remove',check:'Check prices',
@@ -324,6 +335,26 @@ function wxFor(date){
 let adds={};try{adds=JSON.parse(localStorage.getItem(KEY))||{}}catch(e){}
 const saveAdds=()=>{try{localStorage.setItem(KEY,JSON.stringify(adds))}catch(e){}};
 const isOpen=(x,date)=>!x.open||x.open.includes(wd(date));
+/* ---------- stars & filters (saved on this phone) ---------- */
+const SKEY='villamartin-trip-stars',FKEY='villamartin-trip-filter';
+let stars={};try{stars=JSON.parse(localStorage.getItem(SKEY))||{}}catch(e){}
+const saveStars=()=>{try{localStorage.setItem(SKEY,JSON.stringify(stars))}catch(e){}};
+let F={types:[],min:0,sort:'dist'};try{F={...F,...(JSON.parse(localStorage.getItem(FKEY))||{})}}catch(e){}
+const saveF=()=>{try{localStorage.setItem(FKEY,JSON.stringify(F))}catch(e){}};
+/* min: 0 = all, -1 = unrated, 1..5 = at least n stars */
+const pass=x=>(!F.types.length||F.types.includes(x.c))&&(F.min===0||(F.min===-1?!stars[x.id]:(stars[x.id]||0)>=F.min));
+function starsHtml(id){
+ const v=stars[id]||0;let s='';
+ for(let i=1;i<=5;i++)s+=`<button type="button" class="${i<=v?'on':''}" data-star="${id}" data-v="${i}" aria-label="${U('rate',{n:i})}" aria-pressed="${i<=v}">★</button>`;
+ return `<div class="stars" role="group" aria-label="${U('starF')}">${s}</div>`;
+}
+function filterHtml(){
+ const tc=(v,l)=>`<button type="button" class="fchip${v===''?(F.types.length?'':' on'):(F.types.includes(v)?' on':'')}" data-ft="${v}" aria-pressed="${v===''?!F.types.length:F.types.includes(v)}">${esc(l)}</button>`;
+ const sc=(v,l)=>`<button type="button" class="fchip st${F.min===v?' on':''}" data-fs="${v}" aria-pressed="${F.min===v}">${l}</button>`;
+ return `<div class="frow" role="group" aria-label="${U('filter')}">${tc('',U('allTypes'))}${cats.map(c=>tc(c,catN(c))).join('')}</div>
+ <div class="frow" role="group" aria-label="${U('starF')}">${sc(0,U('allStars'))}${sc(1,U('rated'))}${sc(3,'★3+')}${sc(4,'★4+')}${sc(5,U('five'))}${sc(-1,U('unrated'))}</div>`;
+}
+function renderFilters(){const h=filterHtml();$('fPicks').innerHTML=h;$('fAll').innerHTML=h}
 
 function ranked(day){
  const w=wxFor(day.date),wet=w&&w.p>=60,date=day.date;
@@ -353,7 +384,7 @@ function renderDays(){
 function itemHtml(x,n,kind,date){
  const open=x.open?U('open')+' '+x.open.map(i=>(LANG==='is'?DN_IS:DN)[i]).join(', '):'';
  const closed=!isOpen(x,date);
- return `<li class="item${kind==='plan'?' plan':''}"><span class="num">${n}</span><div><h4>${esc(nm(x))}</h4><p>${esc(tt(x))}</p>
+ return `<li class="item${kind==='plan'?' plan':''}"><span class="num">${n}</span><div><h4>${esc(nm(x))}</h4>${starsHtml(x.id)}<p>${esc(tt(x))}</p>
  <div class="meta">${kind==='plan'?`<span class="chip planned">${U('inPlan')}</span>`:''}${kind==='added'?`<span class="chip planned">${U('added')}</span>`:''}<span class="chip">${esc(catN(x.c))}</span><span class="chip">${esc(x.a)} · ~${x.d} ${U('min')}</span>${x.in?`<span class="chip in">${U('indoor')}</span>`:''}${open?`<span class="chip">${open}</span>`:''}${closed&&kind!=='all'?`<span class="chip warn">${U('closed')}</span>`:''}</div>
  <div class="links">${x.ul==='Map'?'':`<a href="${esc(x.u)}" target="_blank" rel="noopener">${U(x.ul==='Info'?'info':'website')}</a>`}<a href="${esc(map(x.q))}" target="_blank" rel="noopener">${U('dir')}</a>${kind==='added'?`<button type="button" data-rm="${x.id}">${U('remove')}</button>`:''}</div></div></li>`;
 }
@@ -365,10 +396,11 @@ function renderDay(){
  if(d.hotel)notes+=`<div class="note">${U('hotelNight',{c:esc(d.hotel)})}</div>`;
  if(r.wet)notes+=`<div class="note rain">${U('rainLikely',{p:w.p})}</div>`;
  $('dNotes').innerHTML=notes;
- const all=[...r.plan.map(x=>[x,'plan']),...r.added.map(x=>[x,'added']),...r.rest.map(x=>[x,'rest'])].slice(0,50);
+ const all=[...r.plan.map(x=>[x,'plan']),...r.added.map(x=>[x,'added']),...r.rest.map(x=>[x,'rest'])].filter(([x])=>pass(x)).slice(0,50);
  const shown=showAll?all:all.slice(0,10);
  $('picksTitle').textContent=showAll?U('allSug',{n:all.length}):U('top10');
- $('picks').innerHTML=shown.map(([x,k],i)=>itemHtml(x,i+1,k,d.date)).join('');
+ $('picks').innerHTML=shown.length?shown.map(([x,k],i)=>itemHtml(x,i+1,k,d.date)).join(''):`<li class="empty">${U('none')}</li>`;
+ $('moreBtn').hidden=all.length<=10;
  $('moreBtn').textContent=showAll?U('showTop'):U('showAll',{n:all.length});
  const inDay=new Set([...d.ids,...(adds[d.date]||[])]);
  $('addSel').innerHTML=A.filter(x=>!inDay.has(x.id)).map(x=>`<option value="${x.id}">${esc(nm(x))} (${esc(x.a)})</option>`).join('');
@@ -381,9 +413,8 @@ function renderWx(d,w){
  <p class="src">${w.src==='live'?U('live'):U('snap')+(d.hotel||d.date==='2026-11-29'?U('snapV'):'')}</p>`;
 }
 function renderAll(){
- const c=$('catSel').value;
- const list=A.filter(x=>!c||x.c===c).sort((a,b)=>a.d-b.d);
- $('all').innerHTML=list.map((x,i)=>itemHtml(x,i+1,'all',P[cur].date)).join('');
+ const list=A.filter(pass).sort((a,b)=>F.sort==='stars'?((stars[b.id]||0)-(stars[a.id]||0))||a.d-b.d:a.d-b.d);
+ $('all').innerHTML=list.length?list.map((x,i)=>itemHtml(x,i+1,'all',P[cur].date)).join(''):`<li class="empty">${U('none')}</li>`;
 }
 function renderHotels(){
  $('hotels').innerHTML=HOTELS.map((h,i)=>{const t=LANG==='is'?H_IS[i]:[h.n,h.c,h.t];return `<div class="hcard"><h4>${esc(t[0])}</h4><p class="small">${esc(t[1])}</p><p>${esc(t[2])}</p><p><a href="${esc(h.u)}" target="_blank" rel="noopener">${U('check')}</a></p></div>`}).join('')+
@@ -417,7 +448,15 @@ $('days').addEventListener('click',e=>{const b=e.target.closest('.day');if(!b)re
 $('moreBtn').addEventListener('click',()=>{showAll=!showAll;renderDay()});
 $('addBtn').addEventListener('click',()=>{const id=$('addSel').value;if(!id)return;const k=P[cur].date;adds[k]=adds[k]||[];if(!adds[k].includes(id))adds[k].push(id);saveAdds();renderDay()});
 $('picks').addEventListener('click',e=>{const b=e.target.closest('[data-rm]');if(!b)return;const k=P[cur].date;adds[k]=(adds[k]||[]).filter(x=>x!==b.dataset.rm);saveAdds();renderDay()});
-$('catSel').addEventListener('change',renderAll);
+$('sortSel').addEventListener('change',()=>{F.sort=$('sortSel').value;saveF();renderAll()});
+document.addEventListener('click',e=>{
+ const s=e.target.closest('[data-star]');
+ if(s){const id=s.dataset.star,v=+s.dataset.v;if(stars[id]===v)delete stars[id];else stars[id]=v;saveStars();renderDay();renderAll();return}
+ const t=e.target.closest('[data-ft]');
+ if(t){const v=t.dataset.ft;if(!v)F.types=[];else F.types=F.types.includes(v)?F.types.filter(x=>x!==v):[...F.types,v];saveF();renderFilters();renderDay();renderAll();return}
+ const m=e.target.closest('[data-fs]');
+ if(m){F.min=+m.dataset.fs;saveF();renderFilters();renderDay();renderAll()}
+});
 
 const cats=[...new Set(A.map(x=>x.c))];
 function statics(){
@@ -425,7 +464,8 @@ function statics(){
  $('hTitle').textContent=U('title');$('hSub').textContent=U('sub');$('langBtn').textContent=U('lang');
  $('days').setAttribute('aria-label',U('days'));$('addLbl').textContent=U('addLbl');$('addBtn').textContent=U('add');
  $('hotelsH').textContent=U('hotels');$('allH').textContent=U('allAct');$('footP').textContent=U('foot');$('srcH').textContent=U('sources');
- const cv=$('catSel').value;$('catSel').setAttribute('aria-label',U('filter'));$('catSel').innerHTML=`<option value="">${U('allTypes')}</option>`+cats.map(c=>`<option value="${c}">${catN(c)}</option>`).join('');$('catSel').value=cv;
+ $('sortSel').setAttribute('aria-label',U('sort'));$('sortSel').innerHTML=`<option value="dist">${U('sortDist')}</option><option value="stars">${U('sortStars')}</option>`;$('sortSel').value=F.sort;
+ F.types=F.types.filter(c=>cats.includes(c));renderFilters();
 }
 function renderAllViews(){statics();renderCount();renderDays();renderDay();renderHotels();renderAll()}
 $('langBtn').addEventListener('click',()=>{LANG=LANG==='is'?'en':'is';try{localStorage.setItem('villamartin-lang',LANG)}catch(e){}renderAllViews()});
