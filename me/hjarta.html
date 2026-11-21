@@ -3,12 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#1c2a5c">
+<meta name="theme-color" content="#7a1f2b">
 <title>Hjartsláttur</title>
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<script>if('serviceWorker' in navigator)navigator.serviceWorker.register('../sw.js');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
 <style>
@@ -67,6 +63,15 @@ nav button[aria-current="true"]{color:var(--acc);box-shadow:inset 0 3px 0 var(--
 .bar em{font-style:normal;text-align:right;color:var(--mute)}
 svg text{font:12px Barlow,sans-serif;fill:var(--mute)}
 .empty{color:var(--mute);text-align:center;padding:24px 8px}
+.qgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.qbtn{border:1.5px solid #efc7cc;background:#fff;border-radius:14px;min-height:56px;padding:8px 10px;font-weight:600;font-size:16px;color:var(--accd);cursor:pointer;text-align:center}
+.qbtn:active{background:var(--soft)}
+.qhint{font-size:14px;color:var(--mute);margin:-4px 0 10px}
+.snack{position:fixed;left:12px;right:12px;bottom:76px;max-width:616px;margin:0 auto;background:var(--ink);color:#fff;border-radius:14px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:8px;z-index:9;box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.snack[hidden]{display:none}
+.snack span{flex:1;font-weight:600}
+.snack button{background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:10px;min-height:44px;padding:0 12px;font-weight:600;cursor:pointer}
+.more{color:var(--acc);font-size:14px;font-weight:600;margin-top:4px}
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:12px;font-weight:600;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;max-width:90vw;text-align:center}
 .toast.on{opacity:1}
 .note{font-size:14px;color:var(--mute);background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -88,9 +93,20 @@ svg text{font:12px Barlow,sans-serif;fill:var(--mute)}
 <main>
 <!-- LOG -->
 <section class="view" id="v-log">
+  <div class="card" id="linkCard" hidden style="border-color:var(--acc);background:var(--soft)">
+    <h2 data-t="lkH"></h2>
+    <div id="linkBody"></div>
+    <div class="row" style="margin-top:12px"><button class="save" style="margin:0;flex:1" id="linkYes" type="button" data-t="lkYes"></button><button class="ghost" id="linkNo" type="button" data-t="cancel"></button></div>
+  </div>
   <button class="quick" id="quickBtn" type="button"><span data-t="quick"></span><small data-t="quickSub"></small></button>
 
   <div class="card">
+    <h2 data-t="qH"></h2>
+    <p class="qhint" data-t="qHint"></p>
+    <div class="qgrid" id="qGrid"></div>
+  </div>
+
+  <div class="card" id="detailCard">
     <div class="edit" id="editBar" hidden><span data-t="editing"></span><button class="ghost" id="cancelEdit" type="button" data-t="cancel"></button></div>
     <h2 data-t="detail"></h2>
 
@@ -178,15 +194,16 @@ svg text{font:12px Barlow,sans-serif;fill:var(--mute)}
   <button type="button" data-v="stats" data-t="navStats"></button>
   <button type="button" data-v="data" data-t="navData"></button>
 </nav>
+<div class="snack" id="snack" hidden role="status"><span id="snackT"></span><button type="button" id="snackMore"></button><button type="button" id="snackUndo"></button></div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 const LG={
-is:{title:'Hjartsláttur',sub:'Skráðu aukaslög og aðstæður',quick:'Ég fann aukaslag núna',quickSub:'Skráir tímann strax, þú getur bætt við á eftir',
+is:{title:'Hjartsláttur',sub:'Skráðu aukaslög og aðstæður',quick:'Ég fann aukaslag núna',quickSub:'Skráir eitt slag strax, aðstæður og annað má bæta við síðar',
 detail:'Nánar',editing:'Þú ert að breyta skráningu',cancel:'Hætta við',when:'Hvenær',kind:'Hvernig leið það',sit:'Aðstæður',sym:'Önnur einkenni',dur:'Hversu lengi',inten:'Styrkur (1 = varla, 5 = mjög sterkt)',
 pulse:'Púls (ef mældur)',pulsePh:'t.d. 72',noteL:'Athugasemd',notePh:'Hvað varstu að gera? Eitthvað sérstakt?',save:'Vista skráningu',saveEdit:'Vista breytingar',del:'Eyða skráningu',
 safety:'Þetta er skráningartæki, ekki læknisfræðilegt mat. Ef þú færð brjóstverk, mikla mæði, yfirlið eða hjartsláttur hættir ekki, hringdu í 112. Taktu yfirlitið með þér til læknis.',
-navLog:'Skrá',navHist:'Saga',navStats:'Yfirlit',navData:'Gögn',
+qH:'Hraðskráning – eitt slag',qHint:'Einn smellur skráir eitt aukaslag núna með þessum aðstæðum. Bættu við upplýsingum síðar í Sögu.',more:'Bæta við',undo:'Afturkalla',undone:'Hætt við skráningu',qSaved:'Skráð {t} · {x}',addMore:'+ Bæta við upplýsingum',lkH:'Skráning úr tengli',lkYes:'Bæta við',lkDone:'Skráningu bætt við ✓',lkDup:'Þessi skráning er þegar komin inn',lkBad:'Tengillinn er ekki gild skráning',navLog:'Skrá',navHist:'Saga',navStats:'Yfirlit',navData:'Gögn',
 now:'Núna','m5':'−5 mín','m15':'−15 mín','h1':'−1 klst','h3':'−3 klst',yest:'Í gær sama tíma',
 addSit:'+ Bæta við',addSitQ:'Nýjar aðstæður:',saved:'Vistað ✓',quickSaved:'Skráð {t}. Bættu við nánar ef þú vilt.',updated:'Breytingum vistað ✓',deleted:'Skráningu eytt',delQ:'Eyða þessari skráningu?',
 all:'Allt',d7:'Síðustu 7 dagar',d30:'Síðustu 30 dagar',d90:'Síðustu 90 dagar',allSit:'Allar aðstæður',
@@ -200,11 +217,11 @@ wipeH:'Eyða öllu',wipe:'Eyða öllum skráningum',wipeQ:'Eyða ÖLLUM skránin
 storeWarn:'Vafrinn leyfir ekki vistun hér. Skráningar týnast þegar síðunni er lokað.',
 sec:'sek',min:'mín',hdr:'Dags.;Tími;Tegund;Lengd;Styrkur;Púls;Aðstæður;Einkenni;Athugasemd',summary:'Yfirlit aukaslaga',
 days:['sunnudagur','mánudagur','þriðjudagur','miðvikudagur','fimmtudagur','föstudagur','laugardagur'],mon:['jan.','feb.','mars','apr.','maí','júní','júlí','ágú.','sep.','okt.','nóv.','des.']},
-en:{title:'Heartbeat',sub:'Log extra beats and what you were doing',quick:'I felt an extra beat now',quickSub:'Saves the time now; add details after',
+en:{title:'Heartbeat',sub:'Log extra beats and what you were doing',quick:'I felt an extra beat now',quickSub:'Logs one beat now; add situation and details later',
 detail:'Details',editing:'Editing an entry',cancel:'Cancel',when:'When',kind:'What it felt like',sit:'Situation',sym:'Other symptoms',dur:'How long',inten:'Strength (1 = barely, 5 = very strong)',
 pulse:'Pulse (if measured)',pulsePh:'e.g. 72',noteL:'Note',notePh:'What were you doing? Anything special?',save:'Save entry',saveEdit:'Save changes',del:'Delete entry',
 safety:'This is a logging tool, not a medical assessment. If you get chest pain, severe shortness of breath, fainting, or the racing won’t stop, call emergency services (112). Take the summary to your doctor.',
-navLog:'Log',navHist:'History',navStats:'Summary',navData:'Data',
+qH:'Quick log – one beat',qHint:'One tap logs one extra beat now with this situation. Add details later in History.',more:'Add details',undo:'Undo',undone:'Entry removed',qSaved:'Logged {t} · {x}',addMore:'+ Add details',lkH:'Entry from a link',lkYes:'Add it',lkDone:'Entry added ✓',lkDup:'This entry is already in',lkBad:'The link is not a valid entry',navLog:'Log',navHist:'History',navStats:'Summary',navData:'Data',
 now:'Now','m5':'−5 min','m15':'−15 min','h1':'−1 h','h3':'−3 h',yest:'Yesterday same time',
 addSit:'+ Add',addSitQ:'New situation:',saved:'Saved ✓',quickSaved:'Logged {t}. Add details if you like.',updated:'Changes saved ✓',deleted:'Entry deleted',delQ:'Delete this entry?',
 all:'All',d7:'Last 7 days',d30:'Last 30 days',d90:'Last 90 days',allSit:'All situations',
@@ -281,12 +298,24 @@ $('pulse').addEventListener('input',e=>form.pulse=e.target.value);
 $('note').addEventListener('input',e=>form.note=e.target.value);
 
 function entryFromForm(){return{t:form.t,kind:form.kind,sit:[...form.sit],sym:[...form.sym],dur:form.dur,inten:form.inten,pulse:form.pulse?+form.pulse:null,note:form.note.trim()}}
-$('quickBtn').onclick=()=>{
- const e={id:uid(),t:Date.now(),kind:null,sit:[],sym:[],dur:null,inten:null,pulse:null,note:''};
- entries.push(e);persist();editId=e.id;form=Object.assign(blank(),e,{pulse:''});renderForm();
+function quickLog(sitKey){
+ const e={id:uid(),t:Date.now(),kind:'single',sit:sitKey?[sitKey]:[],sym:[],dur:'b',inten:null,pulse:null,note:''};
+ entries.push(e);persist();
  if(navigator.vibrate)try{navigator.vibrate(30)}catch(_){}
- toast(U('quickSaved',{t:hm(e.t)}));$('kindChips').scrollIntoView({behavior:'smooth',block:'center'});
-};
+ snack(U('qSaved',{t:hm(e.t),x:sitKey?lbl(SITS,sitKey):lbl(KINDS,'single')}),e.id);renderQuick();
+}
+let snackId=null;
+function snack(msg,id){snackId=id;$('snackT').textContent=msg;$('snackMore').textContent=U('more');$('snackUndo').textContent=U('undo');$('snack').hidden=false;clearTimeout(snack.h);snack.h=setTimeout(()=>$('snack').hidden=true,7000)}
+$('snackMore').onclick=()=>{$('snack').hidden=true;if(snackId)openEdit(snackId);$('detailCard').scrollIntoView({behavior:'smooth'})};
+$('snackUndo').onclick=()=>{$('snack').hidden=true;entries=entries.filter(x=>x.id!==snackId);persist();toast(U('undone'));renderQuick();if(view==='hist')renderHist()};
+$('quickBtn').onclick=()=>quickLog(null);
+function renderQuick(){
+ const cnt={};entries.forEach(e=>(e.sit||[]).forEach(k=>cnt[k]=(cnt[k]||0)+1));
+ const base=['rest','lying','coffee','stress','afterex','meal','standup','sleep'];
+ const keys=[...new Set([...Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]),...base,...settings.custom.map(c=>'c:'+c)])].filter(k=>SITS[k]||(k.startsWith('c:')&&settings.custom.includes(k.slice(2)))).slice(0,8);
+ $('qGrid').innerHTML=keys.map(k=>`<button type="button" class="qbtn" data-k="${esc(k)}">${esc(lbl(SITS,k))}</button>`).join('');
+ $('qGrid').querySelectorAll('.qbtn').forEach(b=>b.onclick=()=>quickLog(b.dataset.k));
+}
 $('saveBtn').onclick=()=>{
  const data=entryFromForm();
  if(editId){const i=entries.findIndex(x=>x.id===editId);if(i>=0)entries[i]=Object.assign(entries[i],data);toast(U('updated'))}
@@ -311,7 +340,7 @@ function renderHist(){
  list.forEach(e=>{const dk=dayKey(e.t);if(dk!==cur){cur=dk;const n=list.filter(x=>dayKey(x.t)===dk).length;html+=`<div class="day">${esc(dayLabel(e.t))} · ${n}</div>`}
   const bits=[];if(e.dur)bits.push(lbl(DURS,e.dur));if(e.inten)bits.push(U('inten').split(' ')[0]+' '+e.inten+'/5');if(e.pulse)bits.push(e.pulse+' bpm');
   const tags=(e.sit||[]).map(k=>`<span class="tag">${esc(lbl(SITS,k))}</span>`).join('')+(e.sym||[]).filter(k=>k!=='none').map(k=>`<span class="tag${WARN.has(k)?' warn':''}">${esc(lbl(SYMS,k))}</span>`).join('');
-  html+=`<button type="button" class="entry" data-id="${e.id}"><span class="t">${hm(e.t)}</span>${e.kind?`<span class="k">${esc(lbl(KINDS,e.kind))}</span>`:''}${bits.length?`<div class="s">${esc(bits.join(' · '))}</div>`:''}${tags?`<div>${tags}</div>`:''}${e.note?`<div class="s">${esc(e.note)}</div>`:''}</button>`});
+  html+=`<button type="button" class="entry" data-id="${e.id}"><span class="t">${hm(e.t)}</span>${e.kind?`<span class="k">${esc(lbl(KINDS,e.kind))}</span>`:''}${bits.length?`<div class="s">${esc(bits.join(' · '))}</div>`:''}${tags?`<div>${tags}</div>`:''}${e.note?`<div class="s">${esc(e.note)}</div>`:''}${(!e.inten&&!e.note&&!(e.sym||[]).length&&!e.pulse)?`<div class="more">${U('addMore')}</div>`:''}</button>`});
  $('histList').innerHTML=html;$('histList').querySelectorAll('.entry').forEach(b=>b.onclick=()=>openEdit(b.dataset.id));
 }
 $('fRange').onchange=renderHist;$('fSit').onchange=renderHist;
@@ -367,14 +396,33 @@ $('wipeBtn').onclick=()=>{if(!confirm(U('wipeQ')))return;entries=[];persist();to
 /* ---------- nav & lang ---------- */
 let view='log';
 function show(v){view=v;document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-current',b.dataset.v===v));
- if(v==='hist')renderHist();if(v==='stats')renderStats();if(v==='data')renderData();if(v==='log')renderForm()}
+ if(v==='hist')renderHist();if(v==='stats')renderStats();if(v==='data')renderData();if(v==='log'){renderForm();renderQuick()}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{show(b.dataset.v);window.scrollTo({top:0})});
 function statics(){document.documentElement.lang=LANG;document.title=U('title');
  document.querySelectorAll('[data-t]').forEach(el=>el.textContent=U(el.dataset.t));
  document.querySelectorAll('[data-ph]').forEach(el=>el.placeholder=U(el.dataset.ph));
  $('langBtn').textContent=LANG==='is'?'EN':'IS';$('langBtn').setAttribute('aria-label',LANG==='is'?'English':'Íslenska')}
 $('langBtn').onclick=()=>{LANG=LANG==='is'?'en':'is';try{localStorage.setItem(LKEY,LANG)}catch(e){}statics();show(view)};
-statics();show('log');if(!storeOK)toast(U('storeWarn'));
+statics();show('log');
+/* ---------- add from link: ?add=YYYY-MM-DDTHH:MM&kind=&sit=a,b&sym=&dur=&inten=&pulse=&note=&id= ---------- */
+let linkEntry=null;
+(function(){let q;try{q=new URLSearchParams(location.search)}catch(e){return}
+ if(!q.has('add'))return;
+ const clean=()=>{try{history.replaceState(null,'',location.pathname+location.hash)}catch(e){}};
+ const t=new Date(q.get('add')).getTime(),list=k=>(q.get(k)||'').split(',').map(x=>x.trim()).filter(Boolean);
+ if(isNaN(t)){clean();toast(U('lkBad'));return}
+ const pick=(map,k)=>map[k]?k:null;
+ const sit=list('sit').map(k=>SITS[k]?k:(k.startsWith('c:')?k:'c:'+k));
+ const id=q.get('id')||('lk-'+t);
+ linkEntry={id,t,kind:pick(KINDS,q.get('kind'))||'single',sit,sym:list('sym').filter(k=>SYMS[k]),dur:pick(DURS,q.get('dur'))||'b',
+  inten:Math.min(5,Math.max(0,+q.get('inten')||0))||null,pulse:+q.get('pulse')||null,note:(q.get('note')||'').slice(0,500)};
+ clean();
+ if(entries.some(e=>e.id===id)){toast(U('lkDup'));linkEntry=null;return}
+ const e=linkEntry,parts=[lbl(KINDS,e.kind),lbl(DURS,e.dur)];if(e.inten)parts.push(e.inten+'/5');if(e.pulse)parts.push(e.pulse+' bpm');
+ $('linkBody').innerHTML=`<div class="t" style="font-weight:700;font-size:18px">${esc(dayLabel(e.t))} · ${hm(e.t)}</div><div class="s" style="color:var(--mute)">${esc(parts.join(' · '))}</div><div>${e.sit.map(k=>`<span class="tag">${esc(lbl(SITS,k))}</span>`).join('')}${e.sym.map(k=>`<span class="tag${WARN.has(k)?' warn':''}">${esc(lbl(SYMS,k))}</span>`).join('')}</div>${e.note?`<div class="s" style="margin-top:4px">${esc(e.note)}</div>`:''}`;
+ $('linkCard').hidden=false;})();
+$('linkYes').onclick=()=>{if(!linkEntry)return;entries.push(linkEntry);persist();$('linkCard').hidden=true;toast(U('lkDone'));linkEntry=null;renderQuick()};
+$('linkNo').onclick=()=>{$('linkCard').hidden=true;linkEntry=null};if(!storeOK)toast(U('storeWarn'));
 </script>
 </body>
 </html>
