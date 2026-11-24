@@ -79,7 +79,11 @@
   <script>
     (async () => {
       const apps = document.getElementById('apps');
-      apps.prepend(appTile('my-weather.html', 'me/my-weather.html'));
+      // Always shown, also when the GitHub API cannot list the other apps.
+      const fixed = [['handheld.html', 'handheld/'], ['my-weather.html', 'me/my-weather.html']];
+      const fixedNames = fixed.map(([name]) => name);
+      const showFixed = () => apps.prepend(...fixed.map(([name, href]) => appTile(name, href)));
+      showFixed();
       try {
         const api = 'https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/';
         const [publicResponse, personalResponse] = await Promise.all([fetch(api), fetch(`${api}me`)]);
@@ -87,13 +91,16 @@
         const [publicEntries, personalEntries] = await Promise.all([publicResponse.json(), personalResponse.json()]);
         const files = [
           ...publicEntries
-            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html')
+            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html'
+              && !fixedNames.includes(entry.name))
             .map(entry => ({ name: entry.name, href: entry.name })),
           ...personalEntries
-            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html')
+            .filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html'
+              && !fixedNames.includes(entry.name))
             .map(entry => ({ name: entry.name, href: `me/${entry.name}` }))
         ];
         apps.replaceChildren();
+        showFixed();
         for (const file of files) {
           apps.append(appTile(file.name, file.href));
         }
