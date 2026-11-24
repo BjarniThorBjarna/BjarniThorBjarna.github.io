@@ -1,0 +1,175 @@
+{
+ "appSettings": {
+  "minimumAppVersion": "1.0.0",
+  "latestAppVersion": "1.0.0",
+  "downloadUrl": ""
+ },
+ "items": [
+  {
+   "number": "1896-S",
+   "displayName": "ATHENS Desk",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 1000.0,
+   "inventory": 45.0,
+   "gtin": "2485992216031"
+  },
+  {
+   "number": "1900-S",
+   "displayName": "PARIS Guest Chair",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 193.2,
+   "inventory": 122.0,
+   "gtin": "2633729280293"
+  },
+  {
+   "number": "1908-S",
+   "displayName": "LONDON Swivel Chair",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 305.0,
+   "inventory": 47.0,
+   "gtin": "2269066373390"
+  },
+  {
+   "number": "1920-S",
+   "displayName": "ANTWERP Conference Table",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 720.0,
+   "inventory": 7.0,
+   "gtin": "2858843146519"
+  },
+  {
+   "number": "1928-S",
+   "displayName": "AMSTERDAM Lamp",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 65.0,
+   "inventory": 165.0,
+   "gtin": "2129611366416"
+  },
+  {
+   "number": "1960-S",
+   "displayName": "ROME Guest Chair",
+   "salesUnitOfMeasure": "PCS",
+   "unitPrice": 185.0,
+   "inventory": 21.0,
+   "gtin": "2102177941518"
+  }
+ ],
+ "locations": [
+  {
+   "code": "EAST",
+   "name": "East Warehouse"
+  },
+  {
+   "code": "WEST",
+   "name": "West Distribution Center"
+  },
+  {
+   "code": "MAIN",
+   "name": "Main Warehouse"
+  }
+ ],
+ "customers": [
+  {
+   "number": "10000",
+   "displayName": "Adatum Corporation"
+  },
+  {
+   "number": "20000",
+   "displayName": "Trey Research"
+  },
+  {
+   "number": "30000",
+   "displayName": "Coho Winery"
+  },
+  {
+   "number": "40000",
+   "displayName": "Fabrikam Inc."
+  },
+  {
+   "number": "50000",
+   "displayName": "Graphic Design Institute"
+  }
+ ],
+ "stock": [
+  {
+   "itemNumber": "1896-S",
+   "locationCode": "MAIN",
+   "quantity": 25.0
+  },
+  {
+   "itemNumber": "1896-S",
+   "locationCode": "EAST",
+   "quantity": 12.0
+  },
+  {
+   "itemNumber": "1896-S",
+   "locationCode": "WEST",
+   "quantity": 8.0
+  },
+  {
+   "itemNumber": "1900-S",
+   "locationCode": "MAIN",
+   "quantity": 60.0
+  },
+  {
+   "itemNumber": "1900-S",
+   "locationCode": "EAST",
+   "quantity": 40.0
+  },
+  {
+   "itemNumber": "1900-S",
+   "locationCode": "WEST",
+   "quantity": 22.0
+  },
+  {
+   "itemNumber": "1908-S",
+   "locationCode": "MAIN",
+   "quantity": 30.0
+  },
+  {
+   "itemNumber": "1908-S",
+   "locationCode": "EAST",
+   "quantity": 15.0
+  },
+  {
+   "itemNumber": "1908-S",
+   "locationCode": "WEST",
+   "quantity": 2.0
+  },
+  {
+   "itemNumber": "1920-S",
+   "locationCode": "MAIN",
+   "quantity": 6.0
+  },
+  {
+   "itemNumber": "1920-S",
+   "locationCode": "EAST",
+   "quantity": 1.0
+  },
+  {
+   "itemNumber": "1928-S",
+   "locationCode": "MAIN",
+   "quantity": 80.0
+  },
+  {
+   "itemNumber": "1928-S",
+   "locationCode": "EAST",
+   "quantity": 50.0
+  },
+  {
+   "itemNumber": "1928-S",
+   "locationCode": "WEST",
+   "quantity": 35.0
+  },
+  {
+   "itemNumber": "1960-S",
+   "locationCode": "MAIN",
+   "quantity": 3.0
+  },
+  {
+   "itemNumber": "1960-S",
+   "locationCode": "WEST",
+   "quantity": 18.0
+  }
+ ]
+}

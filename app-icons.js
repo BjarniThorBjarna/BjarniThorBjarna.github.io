@@ -44,6 +44,15 @@ window.APP_ICONS = (() => {
       svg: svg(`
         <path d="M36 59S11 44 11 27c0-8 6-14 14-14 5 0 9 3 11 8 2-5 6-8 11-8 8 0 14 6 14 14 0 17-25 32-25 32Z" fill="#fff" opacity=".96"/>
         <path d="M15 37h12l5-10 8 19 5-9h12" stroke="#c9364b" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>`)
+    },
+    handheld: {
+      bg: 'linear-gradient(145deg,#4f8f5f,#1c2a5c)',
+      svg: svg(`
+        <g fill="#fff"><rect x="15" y="18" width="4" height="36" rx="1"/><rect x="22" y="18" width="2" height="36" rx="1"/>
+        <rect x="27" y="18" width="5" height="36" rx="1"/><rect x="35" y="18" width="2" height="36" rx="1"/>
+        <rect x="40" y="18" width="4" height="36" rx="1"/><rect x="47" y="18" width="2" height="36" rx="1"/>
+        <rect x="52" y="18" width="5" height="36" rx="1"/></g>
+        <path d="M8 36h56" stroke="#f2593a" stroke-width="3" stroke-linecap="round"/>`)
     }
   };
   const fallback = {
