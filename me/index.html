@@ -78,18 +78,20 @@
   <script>
     (async () => {
       const apps = document.getElementById('apps');
+      // The Handheld app lives at the top level; always shown first.
+      const handheld = () => appTile('handheld.html', '../handheld/');
       try {
         const response = await fetch('https://api.github.com/repos/BjarniThorBjarna/BjarniThorBjarna.github.io/contents/me');
         if (!response.ok) throw new Error(`GitHub contents API returned ${response.status}`);
         const entries = await response.json();
         const files = entries.filter(entry => entry.type === 'file' && /\.html$/i.test(entry.name) && entry.name !== 'index.html');
-        apps.replaceChildren();
+        apps.replaceChildren(handheld());
         for (const file of files) {
           apps.append(appTile(file.name, file.name));
         }
-        if (!files.length) apps.innerHTML = '<span class="message">No apps found.</span>';
       } catch (error) {
-        apps.innerHTML = '<span class="message">Could not load app list</span>';
+        apps.replaceChildren(handheld());
+        apps.insertAdjacentHTML('beforeend', '<span class="message">Could not load app list</span>');
       }
     })();
   </script>
